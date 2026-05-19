@@ -1,0 +1,24 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: ${EKS_CLUSTER_NAME}
+  region: ${AWS_REGION}
+  version: "${K8S_VERSION}"
+
+# VPC and subnets provisioned by CDK (infra/).
+# scripts/create-cluster.sh populates these values from CDK outputs.
+vpc:
+  id: "${VPC_ID}"
+  subnets:
+    private:
+      ${AZ_1}: { id: "${PRIVATE_SUBNET_1}" }
+      ${AZ_2}: { id: "${PRIVATE_SUBNET_2}" }
+    public:
+      ${AZ_1}: { id: "${PUBLIC_SUBNET_1}" }
+      ${AZ_2}: { id: "${PUBLIC_SUBNET_2}" }
+
+# Auto Mode — AWS manages Karpenter and node lifecycle.
+# Nodes scale to zero when idle; new nodes provision on pod scheduling pressure.
+autoModeConfig:
+  enabled: true

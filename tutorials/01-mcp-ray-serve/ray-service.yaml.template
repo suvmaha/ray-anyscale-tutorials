@@ -1,0 +1,61 @@
+apiVersion: ray.io/v1
+kind: RayService
+metadata:
+  name: weather-mcp
+  namespace: default
+spec:
+  # import_path resolves because PYTHONPATH=/app is set in the container image.
+  serveConfigV2: |
+    applications:
+    - name: weather-mcp
+      import_path: weather_mcp_ray:app
+      route_prefix: /
+  # EKS Auto Mode provisions an NLB automatically for LoadBalancer services.
+  serveService:
+    spec:
+      type: LoadBalancer
+  rayClusterConfig:
+    rayVersion: "2.44.0"
+    headGroupSpec:
+      rayStartParams:
+        dashboard-host: "0.0.0.0"
+        num-cpus: "0"
+      template:
+        spec:
+          containers:
+          - name: ray-head
+            image: ${ECR_IMAGE}
+            ports:
+            - containerPort: 6379
+              name: gcs-server
+            - containerPort: 8265
+              name: dashboard
+            - containerPort: 10001
+              name: client
+            - containerPort: 8000
+              name: serve
+            resources:
+              limits:
+                cpu: "2"
+                memory: "4Gi"
+              requests:
+                cpu: "1"
+                memory: "2Gi"
+    workerGroupSpecs:
+    - replicas: 1
+      minReplicas: 1
+      maxReplicas: 4
+      groupName: cpu-workers
+      rayStartParams: {}
+      template:
+        spec:
+          containers:
+          - name: ray-worker
+            image: ${ECR_IMAGE}
+            resources:
+              limits:
+                cpu: "2"
+                memory: "4Gi"
+              requests:
+                cpu: "1"
+                memory: "2Gi"
