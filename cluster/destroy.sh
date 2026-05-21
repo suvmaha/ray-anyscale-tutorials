@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# destroy-cluster.sh — Tear down all resources in reverse creation order.
-# Run from the repo root: ./scripts/destroy-cluster.sh
+# destroy.sh — Tear down all resources in reverse creation order.
+# Run from the repo root: ./cluster/destroy.sh
+# For Anyscale: run ./anyscale/teardown.sh first.
 #
 # Order:
 #   1. Delete all RayService / RayCluster / RayJob resources

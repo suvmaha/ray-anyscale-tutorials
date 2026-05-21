@@ -1,80 +1,100 @@
-# Ray Anyscale Tutorials on AWS EKS
+# Ray & Anyscale Tutorials on AWS EKS
 
-Hands-on tutorials deploying open-source Ray workloads on Amazon EKS. Each tutorial shares one base cluster and deploys its own workload independently — create the cluster once, run any tutorial, clean up the workload, repeat.
+Hands-on tutorials for Distributed AI with Ray and Anyscale on Amazon EKS. One base cluster, two paths — open-source KubeRay or managed Anyscale — each tutorial chooses its path.
 
-## Architecture Pattern
+## Two Paths, One Cluster
 
 ```
-One base cluster (EKS Auto Mode + KubeRay)
-├── Tutorial 01 — MCP Ray Serve (weather MCP server, CPU autoscaling)
-├── Tutorial 02 — Ray Data       (coming soon)
-├── Tutorial 03 — Ray Train + GPU (coming soon)
-└── ...
+./cluster/create.sh
+        ↓
+┌───────────────────┬───────────────────────┐
+│   KubeRay Path    │    Anyscale Path       │
+│  (open source)    │  (managed platform)    │
+│                   │                        │
+│ cluster/          │ anyscale/              │
+│   smoke-test.sh   │   setup.sh            │
+│                   │   teardown.sh         │
+│ tutorials/        │ tutorials/             │
+│   mcp-ray-serve/  │   llm-batch-inference/│
+└───────────────────┴───────────────────────┘
+        ↓
+./cluster/destroy.sh
 ```
-
-**Infrastructure:**
-- **EKS Auto Mode** — AWS-managed Karpenter; nodes scale to zero when idle
-- **KubeRay** — Kubernetes operator adding `RayCluster`, `RayJob`, `RayService` CRDs
-- **CDK (Python)** — VPC-only stack (2 AZs, 1 NAT gateway)
-
-## Prerequisites
-
-| Tool | Min version |
-|------|-------------|
-| AWS CLI | configured for your account |
-| eksctl | ≥ 0.195 |
-| kubectl | any recent |
-| helm | ≥ 3 |
-| docker | for tutorial image builds |
-| Python | 3.10+ |
-
-## Cluster Lifecycle
-
-**Create (one time per series):**
-```bash
-./scripts/create-cluster.sh
-```
-
-**Smoke test:**
-```bash
-./scripts/smoke-test.sh
-```
-
-**Destroy (when done with all tutorials):**
-```bash
-./scripts/destroy-cluster.sh
-```
-
-## Tutorials
-
-| # | Title | Ray Library | GPU | Local test |
-|---|-------|-------------|-----|-----------|
-| [01](tutorials/01-mcp-ray-serve/) | MCP Ray Serve — Weather Server | Ray Serve | No | Yes |
 
 ## Repository Layout
 
 ```
 ray-anyscale-tutorials/
-├── infra/                       CDK VPC stack
-│   ├── app.py
-│   └── eks_ray/eks_ray_stack.py
-├── cluster/
-│   └── cluster.yaml.template    eksctl EKS Auto Mode config
-├── scripts/
-│   ├── create-cluster.sh        CDK + eksctl + KubeRay install
-│   ├── smoke-test.sh            Verify KubeRay works
-│   └── destroy-cluster.sh      Full teardown
+├── infra/                        CDK VPC stack (2 AZs, 1 NAT gateway)
+├── cluster/                      EKS cluster lifecycle
+│   ├── cluster.yaml.template     eksctl EKS Auto Mode config
+│   ├── create.sh                 CDK + eksctl + optional KubeRay
+│   ├── smoke-test.sh             Verify KubeRay is working
+│   └── destroy.sh                Full teardown
+├── anyscale/                     Anyscale platform setup
+│   ├── setup.sh                  anyscale cloud setup on EKS
+│   └── teardown.sh               anyscale cloud delete + cleanup
 └── tutorials/
-    └── 01-mcp-ray-serve/        Tutorial 1 workload
-        ├── weather_mcp_ray.py   FastMCP + Ray Serve app
-        ├── Dockerfile
-        ├── ray-service.yaml.template
-        ├── deploy.sh
-        ├── cleanup.sh
-        ├── test-local.sh
-        ├── load_test.py
-        └── locustfile.py
+    ├── mcp-ray-serve/            KubeRay: FastMCP server on Ray Serve
+    └── llm-batch-inference/      Anyscale: LLM batch processing at scale
 ```
+
+## Prerequisites
+
+| Tool | Purpose |
+|------|---------|
+| AWS CLI | configured for your account |
+| eksctl ≥ 0.195 | EKS cluster creation |
+| kubectl | Kubernetes operations |
+| helm ≥ 3 | Operator installation |
+| docker | Tutorial image builds (KubeRay path) |
+| Python 3.10+ | CDK, Anyscale CLI |
+| anyscale CLI | `pip install -U anyscale` (Anyscale path) |
+
+## KubeRay Path
+
+```bash
+# 1. Create cluster with KubeRay
+INSTALL_KUBERAY=true ./cluster/create.sh
+
+# 2. Verify
+./cluster/smoke-test.sh
+
+# 3. Deploy tutorial
+./tutorials/mcp-ray-serve/deploy.sh
+
+# 4. Clean up tutorial
+./tutorials/mcp-ray-serve/cleanup.sh
+
+# 5. Tear down cluster
+./cluster/destroy.sh
+```
+
+## Anyscale Path
+
+```bash
+# 1. Create cluster (no KubeRay)
+./cluster/create.sh
+
+# 2. Wire Anyscale to the cluster
+./anyscale/setup.sh
+
+# 3. Submit tutorial job
+./tutorials/llm-batch-inference/submit.sh
+
+# 4. Remove Anyscale
+./anyscale/teardown.sh
+
+# 5. Tear down cluster
+./cluster/destroy.sh
+```
+
+## Tutorials
+
+| Tutorial | Path | Ray Library | Blog |
+|----------|------|-------------|------|
+| [mcp-ray-serve](tutorials/mcp-ray-serve/) | KubeRay | Ray Serve | AI-ML on AWS #8 |
+| [llm-batch-inference](tutorials/llm-batch-inference/) | Anyscale | Ray Data | AI-ML on AWS #7 |
 
 ## Cost
 
@@ -84,4 +104,4 @@ ray-anyscale-tutorials/
 | EKS control plane | ~$0.10/hr |
 | EC2 nodes | Per use, scale to zero when idle |
 
-Run `./scripts/destroy-cluster.sh` when done to stop all charges.
+Run `./cluster/destroy.sh` when done to stop all charges.

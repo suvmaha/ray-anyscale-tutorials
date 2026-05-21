@@ -1,14 +1,17 @@
 #!/usr/bin/env bash
-# create-cluster.sh — Deploy VPC with CDK, create EKS cluster with eksctl, install KubeRay.
-# Run from the repo root: ./scripts/create-cluster.sh
+# create.sh — Deploy VPC with CDK, create EKS cluster with eksctl.
+# Run from the repo root: ./cluster/create.sh
 #
 # Steps:
 #   1. CDK deploys VPC (2 AZs, 1 NAT gateway)
 #   2. Read CDK outputs (VPC ID, subnet IDs)
 #   3. envsubst fills cluster.yaml.template → cluster/cluster.yaml
 #   4. eksctl creates EKS Auto Mode cluster
-#   5. Install KubeRay operator via Helm
+#   5. Optionally install KubeRay (set INSTALL_KUBERAY=true for KubeRay tutorials)
 #   6. Verify
+#
+# For Anyscale tutorials: leave INSTALL_KUBERAY unset (default: false)
+# For KubeRay tutorials:  INSTALL_KUBERAY=true ./cluster/create.sh
 
 set -euo pipefail
 
@@ -28,6 +31,7 @@ export AWS_REGION="${AWS_DEFAULT_REGION:-us-east-1}"
 export EKS_CLUSTER_NAME="eks-ray-platform"
 export K8S_VERSION="${K8S_VERSION:-1.35}"
 export KUBERAY_VERSION="${KUBERAY_VERSION:-1.2.2}"
+INSTALL_KUBERAY="${INSTALL_KUBERAY:-false}"
 
 echo ""
 echo "── STEP 1: Deploy VPC with CDK ─────────────────────────────────────────"
@@ -79,7 +83,7 @@ printf "║  Public subnet  : %-50s║\n" "${PUBLIC_SUBNET_1} (${AZ_1})"
 printf "║  Public subnet  : %-50s║\n" "${PUBLIC_SUBNET_2} (${AZ_2})"
 echo "╠══════════════════════════════════════════════════════════════════════╣"
 printf "║  Node mode      : %-50s║\n" "EKS Auto Mode (Karpenter)"
-printf "║  KubeRay        : %-50s║\n" "v${KUBERAY_VERSION} (Helm)"
+printf "║  KubeRay        : %-50s║\n" "${INSTALL_KUBERAY} (set INSTALL_KUBERAY=true to enable)"
 echo "╚══════════════════════════════════════════════════════════════════════╝"
 echo ""
 
@@ -100,23 +104,29 @@ echo "── STEP 4: Create EKS cluster with eksctl ─────────�
 eksctl create cluster -f "${REPO_ROOT}/cluster/cluster.yaml"
 
 echo ""
-echo "── STEP 5: Install KubeRay operator via Helm ───────────────────────────"
-helm repo add kuberay https://ray-project.github.io/kuberay-helm/ --force-update
-helm repo update kuberay
-helm upgrade --install kuberay-operator kuberay/kuberay-operator \
-    --version "${KUBERAY_VERSION}" \
-    --namespace kuberay-system \
-    --create-namespace \
-    --wait
+echo "── STEP 5: Install KubeRay operator (optional) ─────────────────────────"
+if [[ "${INSTALL_KUBERAY}" == "true" ]]; then
+    helm repo add kuberay https://ray-project.github.io/kuberay-helm/ --force-update
+    helm repo update kuberay
+    helm upgrade --install kuberay-operator kuberay/kuberay-operator \
+        --version "${KUBERAY_VERSION}" \
+        --namespace kuberay-system \
+        --create-namespace \
+        --wait
+    echo "KubeRay v${KUBERAY_VERSION} installed."
+else
+    echo "Skipped (INSTALL_KUBERAY=false)."
+    echo "For Anyscale: run ./anyscale/setup.sh next."
+    echo "For KubeRay:  re-run with INSTALL_KUBERAY=true ./cluster/create.sh"
+fi
 
 echo ""
 echo "── STEP 6: Verify ──────────────────────────────────────────────────────"
 kubectl get nodes
 echo ""
-kubectl -n kuberay-system get pods
-echo ""
 echo "EKS cluster ${EKS_CLUSTER_NAME} is ready."
 echo ""
 echo "Next steps:"
-echo "  ./scripts/smoke-test.sh                       # verify KubeRay works"
-echo "  ./tutorials/01-mcp-ray-serve/deploy.sh        # deploy Tutorial 1"
+echo "  ./cluster/smoke-test.sh          # verify cluster (KubeRay path)"
+echo "  ./anyscale/setup.sh              # wire Anyscale to this cluster"
+echo "  ./tutorials/mcp-ray-serve/deploy.sh   # deploy MCP tutorial (KubeRay)"
