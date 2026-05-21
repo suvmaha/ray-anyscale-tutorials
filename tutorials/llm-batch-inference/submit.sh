@@ -3,23 +3,24 @@
 # Run from the repo root: ./tutorials/llm-batch-inference/submit.sh
 #
 # Prerequisites:
-#   - Anyscale is set up on EKS: ./anyscale/setup.sh
-#   - Cloud name matches ANYSCALE_CLOUD_NAME
+#   - Cluster created with GPU NodePool:  INSTALL_GPU_NODEPOOL=true ./cluster/create.sh
+#   - Anyscale wired to the cluster:      ./anyscale/setup.sh
 
 set -euo pipefail
 
 ANYSCALE_CLOUD_NAME="${ANYSCALE_CLOUD_NAME:-eks-ray-cloud}"
+TUTORIAL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "Submitting LLM batch inference job to cloud: ${ANYSCALE_CLOUD_NAME}"
 echo ""
 
 anyscale job submit \
     --cloud "${ANYSCALE_CLOUD_NAME}" \
-    --name "llm-batch-inference" \
-    --working-dir https://github.com/anyscale/docs_examples/archive/refs/heads/main.zip \
-    -- python llm_batch_inference/main.py
+    --working-dir "${TUTORIAL_DIR}" \
+    --config-file "${TUTORIAL_DIR}/job.yaml"
 
 echo ""
 echo "Monitor job:"
-echo "  anyscale job list --cloud ${ANYSCALE_CLOUD_NAME}"
+echo "  anyscale job status --name llm-batch-inference"
+echo "  anyscale job logs --name llm-batch-inference"
 echo "  https://console.anyscale.com"

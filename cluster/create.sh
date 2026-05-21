@@ -7,11 +7,13 @@
 #   2. Read CDK outputs (VPC ID, subnet IDs)
 #   3. envsubst fills cluster.yaml.template → cluster/cluster.yaml
 #   4. eksctl creates EKS Auto Mode cluster
-#   5. Optionally install KubeRay (set INSTALL_KUBERAY=true for KubeRay tutorials)
-#   6. Verify
+#   5. Optionally apply GPU NodePool (g6/L4 — for Anyscale LLM tutorials)
+#   6. Optionally install KubeRay (set INSTALL_KUBERAY=true for KubeRay tutorials)
+#   7. Verify
 #
-# For Anyscale tutorials: leave INSTALL_KUBERAY unset (default: false)
-# For KubeRay tutorials:  INSTALL_KUBERAY=true ./cluster/create.sh
+# For Anyscale LLM tutorials:   INSTALL_GPU_NODEPOOL=true ./cluster/create.sh
+# For Anyscale basic tutorials: leave both unset (default: false)
+# For KubeRay tutorials:        INSTALL_KUBERAY=true ./cluster/create.sh
 
 set -euo pipefail
 
@@ -32,6 +34,7 @@ export EKS_CLUSTER_NAME="eks-ray-platform"
 export K8S_VERSION="${K8S_VERSION:-1.35}"
 export KUBERAY_VERSION="${KUBERAY_VERSION:-1.2.2}"
 INSTALL_KUBERAY="${INSTALL_KUBERAY:-false}"
+INSTALL_GPU_NODEPOOL="${INSTALL_GPU_NODEPOOL:-false}"
 
 echo ""
 echo "── STEP 1: Deploy VPC with CDK ─────────────────────────────────────────"
@@ -83,6 +86,7 @@ printf "║  Public subnet  : %-50s║\n" "${PUBLIC_SUBNET_1} (${AZ_1})"
 printf "║  Public subnet  : %-50s║\n" "${PUBLIC_SUBNET_2} (${AZ_2})"
 echo "╠══════════════════════════════════════════════════════════════════════╣"
 printf "║  Node mode      : %-50s║\n" "EKS Auto Mode (Karpenter)"
+printf "║  GPU NodePool   : %-50s║\n" "${INSTALL_GPU_NODEPOOL} (set INSTALL_GPU_NODEPOOL=true for LLM jobs)"
 printf "║  KubeRay        : %-50s║\n" "${INSTALL_KUBERAY} (set INSTALL_KUBERAY=true to enable)"
 echo "╚══════════════════════════════════════════════════════════════════════╝"
 echo ""
@@ -104,7 +108,17 @@ echo "── STEP 4: Create EKS cluster with eksctl ─────────�
 eksctl create cluster -f "${REPO_ROOT}/cluster/cluster.yaml"
 
 echo ""
-echo "── STEP 5: Install KubeRay operator (optional) ─────────────────────────"
+echo "── STEP 5: Apply GPU NodePool (optional) ───────────────────────────────"
+if [[ "${INSTALL_GPU_NODEPOOL}" == "true" ]]; then
+    kubectl apply -f "${REPO_ROOT}/cluster/gpu-nodepool.yaml"
+    echo "GPU NodePool (g6/L4) applied — Karpenter will provision nodes on demand."
+else
+    echo "Skipped (INSTALL_GPU_NODEPOOL=false)."
+    echo "For Anyscale LLM tutorials: INSTALL_GPU_NODEPOOL=true ./cluster/create.sh"
+fi
+
+echo ""
+echo "── STEP 6: Install KubeRay operator (optional) ─────────────────────────"
 if [[ "${INSTALL_KUBERAY}" == "true" ]]; then
     helm repo add kuberay https://ray-project.github.io/kuberay-helm/ --force-update
     helm repo update kuberay
@@ -121,7 +135,7 @@ else
 fi
 
 echo ""
-echo "── STEP 6: Verify ──────────────────────────────────────────────────────"
+echo "── STEP 7: Verify ──────────────────────────────────────────────────────"
 kubectl get nodes
 echo ""
 echo "EKS cluster ${EKS_CLUSTER_NAME} is ready."
