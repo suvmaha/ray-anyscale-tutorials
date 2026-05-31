@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
-# destroy.sh — Tear down all resources in reverse creation order.
+# destroy.sh — Tear down EKS cluster and VPC.
 # Run from the repo root: ./cluster/destroy.sh
-# For Anyscale: run ./anyscale/teardown.sh first.
+#
+# Prerequisites:
+#   - If using Anyscale: run ./anyscale/teardown.sh first
+#   - If using KubeRay: run ./kuberay/uninstall.sh first
 #
 # Order:
-#   1. Delete all RayService / RayCluster / RayJob resources
-#   2. Uninstall KubeRay Helm release
-#   3. Delete EKS cluster (eksctl)
-#   4. Destroy CDK stack (VPC)
-#   5. Optionally delete ray-* ECR repositories
+#   1. Delete EKS cluster (eksctl)
+#   2. Destroy CDK stack (VPC)
+#   3. Optionally delete ray-* ECR repositories
 
 set -euo pipefail
 
@@ -18,28 +19,7 @@ STACK_NAME="EksRayStack"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-echo "── STEP 1: Delete Ray workloads ────────────────────────────────────────"
-if kubectl cluster-info 2>/dev/null | grep -q "Kubernetes"; then
-    kubectl delete rayservice --all --all-namespaces --ignore-not-found 2>/dev/null || true
-    kubectl delete raycluster --all --all-namespaces --ignore-not-found 2>/dev/null || true
-    kubectl delete rayjob --all --all-namespaces --ignore-not-found 2>/dev/null || true
-    echo "Ray workloads deleted."
-else
-    echo "Cluster not reachable — skipping Ray workload deletion."
-fi
-
-echo ""
-echo "── STEP 2: Uninstall KubeRay ───────────────────────────────────────────"
-if helm status kuberay-operator -n kuberay-system 2>/dev/null | grep -q "deployed"; then
-    helm uninstall kuberay-operator -n kuberay-system
-    kubectl delete namespace kuberay-system --ignore-not-found
-    echo "KubeRay uninstalled."
-else
-    echo "KubeRay not found — skipping."
-fi
-
-echo ""
-echo "── STEP 3: Delete EKS cluster with eksctl ──────────────────────────────"
+echo "── STEP 1: Delete EKS cluster with eksctl ──────────────────────────────"
 CLUSTER_STATUS=$(aws eks describe-cluster --name "${CLUSTER_NAME}" --region "${REGION}" \
     --query 'cluster.status' --output text 2>/dev/null || echo "NOT_FOUND")
 if [[ "${CLUSTER_STATUS}" == "NOT_FOUND" ]]; then
@@ -49,14 +29,14 @@ else
 fi
 
 echo ""
-echo "── STEP 4: Destroy CDK stack (VPC) ─────────────────────────────────────"
+echo "── STEP 2: Destroy CDK stack (VPC) ─────────────────────────────────────"
 cd "${REPO_ROOT}/infra"
 source .venv/bin/activate
 cdk destroy --force
 deactivate
 
 echo ""
-echo "── STEP 5: ECR repositories ────────────────────────────────────────────"
+echo "── STEP 3: ECR repositories ────────────────────────────────────────────"
 REPOS=$(aws ecr describe-repositories --region "${REGION}" \
     --query "repositories[?starts_with(repositoryName,'ray-')].repositoryName" \
     --output text 2>/dev/null || echo "")
