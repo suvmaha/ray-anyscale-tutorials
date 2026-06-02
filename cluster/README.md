@@ -13,7 +13,7 @@ Creates an EKS Auto Mode cluster for running Ray and Anyscale workloads.
 
 Nodes scale to zero when idle. New nodes provision automatically when workloads are scheduled.
 
-> **Note:** Right after cluster creation, `kubectl get nodes` may return "No resources found" — this is expected. EKS Auto Mode does not pre-provision nodes. Karpenter provisions them on demand when a workload is scheduled and terminates them when idle.
+> **Note:** EKS Auto Mode provisions nodes on demand — Karpenter spins them up when workloads are scheduled and terminates them when idle. You may or may not see nodes immediately after cluster creation depending on bootstrap activity.
 
 ## Why This Cluster for Ray and Anyscale
 
