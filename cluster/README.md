@@ -13,6 +13,8 @@ Creates an EKS Auto Mode cluster for running Ray and Anyscale workloads.
 
 Nodes scale to zero when idle. New nodes provision automatically when workloads are scheduled.
 
+> **Note:** After cluster creation, `kubectl get nodes` returns "No resources found" — this is expected. EKS Auto Mode does not pre-provision nodes. Karpenter provisions them on demand when a workload is scheduled.
+
 ## Why This Cluster for Ray and Anyscale
 
 Ray distributes Python workloads across a cluster of machines. Anyscale manages that cluster — scheduling jobs, scaling workers, persisting logs. EKS is where those Ray workers actually run.
