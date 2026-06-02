@@ -1,0 +1,37 @@
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata:
+  name: anyscale-node-pool
+spec:
+  template:
+    metadata:
+      labels:
+        type: karpenter
+        NodeGroupType: anyscale-node-pool
+    spec:
+      nodeClassRef:
+        group: eks.amazonaws.com
+        kind: NodeClass
+        name: default
+      taints:
+        - key: node.anyscale.com/capacity-type
+          value: ON_DEMAND
+          effect: NoSchedule
+      requirements:
+        - key: "eks.amazonaws.com/capacityType"
+          operator: In
+          values: ["ON_DEMAND"]
+        - key: "eks.amazonaws.com/instance-family"
+          operator: In
+          values: ["m5", "m6i", "m6a", "c5", "c6i", "c6a"]
+        - key: "kubernetes.io/arch"
+          operator: In
+          values: ["amd64"]
+        - key: "karpenter.sh/capacity-type"
+          operator: In
+          values: ["on-demand"]
+  limits:
+    cpu: "1000"
+  disruption:
+    consolidationPolicy: WhenEmpty
+    consolidateAfter: 30s
