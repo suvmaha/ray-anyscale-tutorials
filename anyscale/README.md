@@ -19,7 +19,7 @@ After setup, your cluster appears in the Anyscale console at console.anyscale.co
 The `anyscale cloud setup` command is interactive:
 
 - **Namespace** — press Enter to accept `anyscale-operator`
-- **Ingress** — type `n` to skip ingress-nginx (deprecated per Anyscale docs)
+- **Ingress** — type `n` to skip nginx ingress. Anyscale docs mark it as deprecated. Skip it here and configure Envoy Gateway separately if needed.
 
 ## Scripts
 
