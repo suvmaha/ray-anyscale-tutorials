@@ -18,6 +18,7 @@
 set -euo pipefail
 
 export AWS_REGION="${AWS_DEFAULT_REGION:-us-east-1}"
+export AWS_DEFAULT_REGION="${AWS_REGION}"
 export EKS_CLUSTER_NAME="eks-ray-platform"
 export ANYSCALE_CLOUD_NAME="${ANYSCALE_CLOUD_NAME:-eks-ray-cloud}"
 
@@ -34,11 +35,15 @@ echo ""
 
 echo "── Setting up Anyscale on EKS ──────────────────────────────────────────"
 echo "Prompts to watch for:"
+echo "  Name       → type '${ANYSCALE_CLOUD_NAME}' (the cloud name for this cluster)"
 echo "  Namespace  → press Enter to accept 'anyscale-operator'"
 echo "  Ingress    → skip ingress-nginx (type 'n') — configure Envoy Gateway separately"
 echo ""
 
 anyscale cloud setup \
+    --provider aws \
+    --region "${AWS_REGION}" \
+    --name "${ANYSCALE_CLOUD_NAME}" \
     --stack k8s \
     --cluster-name "${EKS_CLUSTER_NAME}" \
     --functional-verify
