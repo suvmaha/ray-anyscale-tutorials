@@ -7,8 +7,9 @@
 #   2. Read CDK outputs (VPC ID, subnet IDs)
 #   3. envsubst fills cluster.yaml.template → cluster/cluster.yaml
 #   4. eksctl creates EKS Auto Mode cluster
-#   5. Optionally apply GPU NodePool (g6/L4 — for LLM tutorials)
-#   6. Verify
+#   5. Associate IAM OIDC provider (required for IRSA)
+#   6. Optionally apply GPU NodePool (g6/L4 — for LLM tutorials)
+#   7. Verify
 #
 # Default:                       ./cluster/create.sh
 # With GPU NodePool:             INSTALL_GPU_NODEPOOL=true ./cluster/create.sh
@@ -104,7 +105,15 @@ echo "── STEP 4: Create EKS cluster with eksctl ─────────�
 eksctl create cluster -f "${REPO_ROOT}/cluster/cluster.yaml"
 
 echo ""
-echo "── STEP 5: Apply GPU NodePool (optional) ───────────────────────────────"
+echo "── STEP 5: Associate IAM OIDC provider ─────────────────────────────────"
+eksctl utils associate-iam-oidc-provider \
+    --cluster "${EKS_CLUSTER_NAME}" \
+    --region "${AWS_REGION}" \
+    --approve
+echo "OIDC provider associated — IRSA enabled for this cluster."
+
+echo ""
+echo "── STEP 7: Apply GPU NodePool (optional) ───────────────────────────────"
 if [[ "${INSTALL_GPU_NODEPOOL}" == "true" ]]; then
     kubectl apply -f "${REPO_ROOT}/cluster/gpu-nodepool.yaml"
     echo "GPU NodePool (g6/L4) applied — Karpenter will provision nodes on demand."
@@ -114,7 +123,7 @@ else
 fi
 
 echo ""
-echo "── STEP 6: Verify ──────────────────────────────────────────────────────"
+echo "── STEP 8: Verify ──────────────────────────────────────────────────────"
 kubectl get nodes
 echo ""
 echo "EKS cluster ${EKS_CLUSTER_NAME} is ready."
