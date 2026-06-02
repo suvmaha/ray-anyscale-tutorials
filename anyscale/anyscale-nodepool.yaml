@@ -18,12 +18,6 @@ spec:
           value: ON_DEMAND
           effect: NoSchedule
       requirements:
-        - key: "eks.amazonaws.com/capacityType"
-          operator: In
-          values: ["ON_DEMAND"]
-        - key: "eks.amazonaws.com/instance-family"
-          operator: In
-          values: ["m5", "m6i", "m6a", "c5", "c6i", "c6a"]
         - key: "kubernetes.io/arch"
           operator: In
           values: ["amd64"]
