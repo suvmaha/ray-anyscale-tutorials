@@ -30,6 +30,10 @@ results = ray.get([f.remote(i) for i in range(100)])
 
 Monitor the job at **console.anyscale.com/jobs**.
 
+## How It Works
+
+There is no local `main.py` in this folder — intentionally. The `submit.sh` script passes the Anyscale examples GitHub repo as `--working-dir`. Anyscale downloads it, and the job runs `job_hello_world/main.py` from inside that zip. No code to maintain locally — we reference the source directly.
+
 ## Expected Output
 
 Anyscale pulls the working directory from the GitHub zip, schedules the job on your EKS cluster, and Ray distributes the 100 tasks across workers. Results appear in the job logs in the console.
