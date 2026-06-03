@@ -16,6 +16,10 @@ set -euo pipefail
 CLUSTER_NAME="eks-ray-platform"
 REGION="${AWS_DEFAULT_REGION:-us-east-1}"
 STACK_NAME="EksRayStack"
+AWS_ACCOUNT_ID=$(aws sts get-caller-identity --output text --query 'Account')
+POLICY_NAME="KarpenterControllerPolicy-${CLUSTER_NAME}"
+NODE_ROLE_NAME="KarpenterNodeRole-${CLUSTER_NAME}"
+INSTANCE_PROFILE_NAME="KarpenterNodeInstanceProfile-${CLUSTER_NAME}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
@@ -29,14 +33,53 @@ else
 fi
 
 echo ""
-echo "── STEP 2: Destroy CDK stack (VPC) ─────────────────────────────────────"
+echo "── STEP 2: Delete Karpenter IAM resources ──────────────────────────────"
+
+if aws iam get-instance-profile --instance-profile-name "${INSTANCE_PROFILE_NAME}" &>/dev/null; then
+    aws iam remove-role-from-instance-profile \
+        --instance-profile-name "${INSTANCE_PROFILE_NAME}" \
+        --role-name "${NODE_ROLE_NAME}" 2>/dev/null || true
+    aws iam delete-instance-profile --instance-profile-name "${INSTANCE_PROFILE_NAME}"
+    echo "  Deleted: ${INSTANCE_PROFILE_NAME}"
+else
+    echo "  Instance profile not found — skipping."
+fi
+
+if aws iam get-role --role-name "${NODE_ROLE_NAME}" &>/dev/null; then
+    for POLICY_ARN in \
+        arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy \
+        arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy \
+        arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly \
+        arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore; do
+        aws iam detach-role-policy --role-name "${NODE_ROLE_NAME}" --policy-arn "${POLICY_ARN}" 2>/dev/null || true
+    done
+    aws iam delete-role --role-name "${NODE_ROLE_NAME}"
+    echo "  Deleted: ${NODE_ROLE_NAME}"
+else
+    echo "  Node role not found — skipping."
+fi
+
+POLICY_ARN="arn:aws:iam::${AWS_ACCOUNT_ID}:policy/${POLICY_NAME}"
+if aws iam get-policy --policy-arn "${POLICY_ARN}" &>/dev/null; then
+    for VERSION in $(aws iam list-policy-versions --policy-arn "${POLICY_ARN}" \
+            --query 'Versions[?!IsDefaultVersion].VersionId' --output text); do
+        aws iam delete-policy-version --policy-arn "${POLICY_ARN}" --version-id "${VERSION}"
+    done
+    aws iam delete-policy --policy-arn "${POLICY_ARN}"
+    echo "  Deleted: ${POLICY_NAME}"
+else
+    echo "  Controller policy not found — skipping."
+fi
+
+echo ""
+echo "── STEP 3: Destroy CDK stack (VPC) ─────────────────────────────────────"
 cd "${REPO_ROOT}/infra"
 source .venv/bin/activate
 cdk destroy --force
 deactivate
 
 echo ""
-echo "── STEP 3: ECR repositories ────────────────────────────────────────────"
+echo "── STEP 4: ECR repositories ────────────────────────────────────────────"
 REPOS=$(aws ecr describe-repositories --region "${REGION}" \
     --query "repositories[?starts_with(repositoryName,'ray-')].repositoryName" \
     --output text 2>/dev/null || echo "")

@@ -9,8 +9,8 @@
 #   4.  Generate cluster.yaml.template → cluster/cluster.yaml
 #   5.  Create EKS cluster (eksctl: system node group + Karpenter IRSA role)
 #   6.  Associate IAM OIDC provider (enables IRSA)
-#   7.  Tag subnets + cluster security group for Karpenter node discovery
-#   8.  Install Karpenter via Helm
+#   7.  Add Karpenter node role to EKS aws-auth (nodes can join the cluster)
+#   8.  Tag subnets + cluster security group for Karpenter node discovery
 #   9.  Install Karpenter via Helm
 #  10.  Apply EC2NodeClass + Anyscale NodePool
 #  11.  Install nginx ingress controller (required for Anyscale DNS registration)
@@ -245,7 +245,7 @@ helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
 echo "nginx ingress controller installed — Anyscale can register DNS for Ray head nodes."
 
 echo ""
-echo "── STEP 13: Apply GPU NodePool (optional) ──────────────────────────────"
+echo "── STEP 12: Apply GPU NodePool (optional) ──────────────────────────────"
 if [[ "${INSTALL_GPU_NODEPOOL}" == "true" ]]; then
     kubectl apply -f "${REPO_ROOT}/cluster/gpu-nodepool.yaml"
     echo "GPU NodePool (g6/L4) applied — Karpenter will provision nodes on demand."
@@ -255,7 +255,7 @@ else
 fi
 
 echo ""
-echo "── STEP 14: Verify ─────────────────────────────────────────────────────"
+echo "── STEP 13: Verify ─────────────────────────────────────────────────────"
 kubectl get nodes
 echo ""
 echo "EKS cluster ${EKS_CLUSTER_NAME} is ready."
