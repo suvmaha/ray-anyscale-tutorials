@@ -48,6 +48,9 @@ spec:
         - key: "karpenter.k8s.aws/instance-category"
           operator: In
           values: ["c", "m", "r"]
+        - key: "eks.amazonaws.com/capacityType"
+          operator: In
+          values: ["ON_DEMAND"]
   limits:
     cpu: "1000"
   disruption:
