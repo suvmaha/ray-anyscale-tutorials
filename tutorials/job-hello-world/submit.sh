@@ -26,7 +26,7 @@ anyscale job submit \
     --cloud "${CLOUD}" \
     --working-dir "${EXAMPLES_REPO}" \
     --name "job-hello-world" \
-    --env-vars "EXAMPLE_ENV_VAR=hello-from-eks" \
+    --env "EXAMPLE_ENV_VAR=hello-from-eks" \
     -- python job_hello_world/main.py
 
 echo ""
