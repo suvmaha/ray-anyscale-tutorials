@@ -251,7 +251,6 @@ helm upgrade --install karpenter \
     --set "settings.clusterEndpoint=${CLUSTER_ENDPOINT}" \
     --set "controller.resources.requests.cpu=200m" \
     --set "controller.resources.requests.memory=512Mi" \
-    --set "controller.resources.limits.memory=1Gi" \
     --set "serviceAccount.annotations.eks\.amazonaws\.com/role-arn=${KARPENTER_ROLE_ARN}" \
     --set "tolerations[0].key=CriticalAddonsOnly" \
     --set "tolerations[0].operator=Exists" \
