@@ -168,7 +168,18 @@ eksctl utils associate-iam-oidc-provider \
 echo "OIDC provider associated — IRSA enabled."
 
 echo ""
-echo "── STEP 7: Tag subnets + cluster SG for Karpenter discovery ────────────"
+echo "── STEP 7: Add Karpenter node role to EKS auth ─────────────────────────"
+eksctl create iamidentitymapping \
+    --cluster "${EKS_CLUSTER_NAME}" \
+    --region "${AWS_REGION}" \
+    --arn "arn:aws:iam::${AWS_ACCOUNT_ID}:role/${NODE_ROLE_NAME}" \
+    --username "system:node:{{EC2PrivateDNSName}}" \
+    --group system:bootstrappers \
+    --group system:nodes
+echo "Karpenter node role added to aws-auth."
+
+echo ""
+echo "── STEP 8: Tag subnets + cluster SG for Karpenter discovery ────────────"
 # EC2NodeClass discovers subnets and security groups by this tag at runtime.
 
 for SUBNET_ID in "${PRIVATE_SUBNET_1}" "${PRIVATE_SUBNET_2}"; do
@@ -188,7 +199,7 @@ aws ec2 create-tags \
 echo "  Tagged cluster SG: ${CLUSTER_SG}"
 
 echo ""
-echo "── STEP 8: Install Karpenter via Helm ──────────────────────────────────"
+echo "── STEP 9: Install Karpenter via Helm ──────────────────────────────────"
 
 ECR_PASSWORD=$(aws ecr-public get-login-password --region us-east-1)
 echo "${ECR_PASSWORD}" | docker login --username AWS --password-stdin public.ecr.aws
@@ -217,12 +228,12 @@ helm upgrade --install karpenter \
 echo "Karpenter ${KARPENTER_VERSION} installed."
 
 echo ""
-echo "── STEP 9: Apply EC2NodeClass + Anyscale NodePool ──────────────────────"
+echo "── STEP 10: Apply EC2NodeClass + Anyscale NodePool ─────────────────────"
 envsubst < "${REPO_ROOT}/cluster/karpenter-nodepool.yaml.template" | kubectl apply -f -
 echo "EC2NodeClass and Anyscale NodePool applied."
 
 echo ""
-echo "── STEP 10: Apply GPU NodePool (optional) ──────────────────────────────"
+echo "── STEP 11: Apply GPU NodePool (optional) ──────────────────────────────"
 if [[ "${INSTALL_GPU_NODEPOOL}" == "true" ]]; then
     kubectl apply -f "${REPO_ROOT}/cluster/gpu-nodepool.yaml"
     echo "GPU NodePool (g6/L4) applied — Karpenter will provision nodes on demand."
@@ -232,7 +243,7 @@ else
 fi
 
 echo ""
-echo "── STEP 11: Verify ─────────────────────────────────────────────────────"
+echo "── STEP 12: Verify ─────────────────────────────────────────────────────"
 kubectl get nodes
 echo ""
 echo "EKS cluster ${EKS_CLUSTER_NAME} is ready."
