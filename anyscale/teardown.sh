@@ -10,6 +10,9 @@ export EKS_CLUSTER_NAME="eks-ray-platform"
 export ANYSCALE_CLOUD_NAME="${ANYSCALE_CLOUD_NAME:-eks-ray-cloud}"
 ANYSCALE_NAMESPACE="${ANYSCALE_NAMESPACE:-anyscale-operator}"
 
+TEARDOWN_START=$(date +%s)
+TEARDOWN_START_LABEL=$(date '+%H:%M:%S')
+
 echo "── STEP 1: Delete Anyscale cloud registration ──────────────────────────"
 anyscale cloud delete --name "${ANYSCALE_CLOUD_NAME}" --yes 2>/dev/null \
     && echo "  Cloud deleted: ${ANYSCALE_CLOUD_NAME}" \
@@ -77,6 +80,16 @@ else
     echo "  CloudFormation stack deleted."
 fi
 
+TEARDOWN_END=$(date +%s)
+TEARDOWN_ELAPSED=$(( TEARDOWN_END - TEARDOWN_START ))
+TEARDOWN_MIN=$(( TEARDOWN_ELAPSED / 60 ))
+TEARDOWN_SEC=$(( TEARDOWN_ELAPSED % 60 ))
+
 echo ""
 echo "Anyscale teardown complete."
+echo ""
+echo "⏱  Started : ${TEARDOWN_START_LABEL}"
+echo "⏱  Finished: $(date '+%H:%M:%S')"
+echo "⏱  Elapsed : ${TEARDOWN_MIN}m ${TEARDOWN_SEC}s"
+echo ""
 echo "Now run: ./cluster/destroy.sh"

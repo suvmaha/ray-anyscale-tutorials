@@ -17,6 +17,8 @@ set -euo pipefail
 CLUSTER_NAME="eks-ray-platform"
 REGION="${AWS_DEFAULT_REGION:-us-east-1}"
 STACK_NAME="EksRayStack"
+DESTROY_START=$(date +%s)
+DESTROY_START_LABEL=$(date '+%H:%M:%S')
 AWS_ACCOUNT_ID=$(aws sts get-caller-identity --output text --query 'Account')
 POLICY_NAME="KarpenterControllerPolicy-${CLUSTER_NAME}"
 NODE_ROLE_NAME="KarpenterNodeRole-${CLUSTER_NAME}"
@@ -175,4 +177,14 @@ EC2_NODES=$(aws ec2 describe-instances --region "${REGION}" \
 [[ "${EKSCTL_STACK}" == "NOT_FOUND" ]] && echo "  ✅  eksctl CloudFormation stack deleted" || echo "  ❌  eksctl stack still exists (${EKSCTL_STACK})"
 [[ "${CDK_STACK}" == "NOT_FOUND" ]] && echo "  ✅  CDK VPC stack deleted" || echo "  ❌  CDK stack still exists (${CDK_STACK})"
 [[ -z "${EC2_NODES}" ]] && echo "  ✅  No EC2 nodes still running" || echo "  ❌  EC2 nodes still running: ${EC2_NODES}"
+
+DESTROY_END=$(date +%s)
+DESTROY_ELAPSED=$(( DESTROY_END - DESTROY_START ))
+DESTROY_MIN=$(( DESTROY_ELAPSED / 60 ))
+DESTROY_SEC=$(( DESTROY_ELAPSED % 60 ))
+
+echo ""
+echo "⏱  Started : ${DESTROY_START_LABEL}"
+echo "⏱  Finished: $(date '+%H:%M:%S')"
+echo "⏱  Elapsed : ${DESTROY_MIN}m ${DESTROY_SEC}s"
 echo ""

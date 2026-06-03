@@ -131,6 +131,8 @@ if [[ "${confirm}" != "y" ]]; then
     echo "Run 'cdk destroy' in infra/ to remove it."
     exit 0
 fi
+CREATE_START=$(date +%s)
+CREATE_START_LABEL=$(date '+%H:%M:%S')
 
 echo ""
 echo "── STEP 3: Create Karpenter IAM policy + node role ─────────────────────"
@@ -287,7 +289,16 @@ echo ""
 echo "── STEP 13: Verify ─────────────────────────────────────────────────────"
 kubectl get nodes
 echo ""
+CREATE_END=$(date +%s)
+CREATE_ELAPSED=$(( CREATE_END - CREATE_START ))
+CREATE_MIN=$(( CREATE_ELAPSED / 60 ))
+CREATE_SEC=$(( CREATE_ELAPSED % 60 ))
+
 echo "EKS cluster ${EKS_CLUSTER_NAME} is ready."
+echo ""
+echo "⏱  Started : ${CREATE_START_LABEL}"
+echo "⏱  Finished: $(date '+%H:%M:%S')"
+echo "⏱  Elapsed : ${CREATE_MIN}m ${CREATE_SEC}s"
 echo ""
 echo "Next steps:"
 echo "  ./anyscale/setup.sh     # wire Anyscale to this cluster"
