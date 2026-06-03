@@ -109,6 +109,24 @@ if [[ -n "${VPC_ID}" ]]; then
     else
         echo "  No stale ENIs found."
     fi
+
+    # Delete the EKS cluster security group left behind after eksctl delete cluster.
+    # CDK cannot delete it (CDK didn't create it) so it blocks VPC deletion.
+    EKS_SGS=$(aws ec2 describe-security-groups \
+        --region "${REGION}" \
+        --filters "Name=vpc-id,Values=${VPC_ID}" \
+                  "Name=group-name,Values=eks-cluster-sg-${CLUSTER_NAME}-*" \
+        --query 'SecurityGroups[].GroupId' \
+        --output text 2>/dev/null || echo "")
+    if [[ -n "${EKS_SGS}" ]]; then
+        echo "  Deleting EKS cluster security group(s):"
+        for SG in ${EKS_SGS}; do
+            aws ec2 delete-security-group --group-id "${SG}" --region "${REGION}"
+            echo "    Deleted: ${SG}"
+        done
+    else
+        echo "  No EKS cluster security groups found."
+    fi
 fi
 
 cd "${REPO_ROOT}/infra"
