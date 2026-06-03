@@ -11,7 +11,7 @@ export ANYSCALE_CLOUD_NAME="${ANYSCALE_CLOUD_NAME:-eks-ray-cloud}"
 ANYSCALE_NAMESPACE="${ANYSCALE_NAMESPACE:-anyscale-operator}"
 
 echo "── STEP 1: Delete Anyscale cloud registration ──────────────────────────"
-anyscale cloud delete --name "${ANYSCALE_CLOUD_NAME}" 2>/dev/null \
+anyscale cloud delete --name "${ANYSCALE_CLOUD_NAME}" --yes 2>/dev/null \
     && echo "  Cloud deleted: ${ANYSCALE_CLOUD_NAME}" \
     || echo "  Cloud not found — skipping."
 
