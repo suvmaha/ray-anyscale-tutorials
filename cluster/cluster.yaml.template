@@ -5,9 +5,11 @@ metadata:
   name: ${EKS_CLUSTER_NAME}
   region: ${AWS_REGION}
   version: "${K8S_VERSION}"
+  tags:
+    cluster: ${EKS_CLUSTER_NAME}
 
 # VPC and subnets provisioned by CDK (infra/).
-# scripts/create-cluster.sh populates these values from CDK outputs.
+# create.sh populates these values from CDK CloudFormation outputs.
 vpc:
   id: "${VPC_ID}"
   subnets:
@@ -18,7 +20,32 @@ vpc:
       ${AZ_1}: { id: "${PUBLIC_SUBNET_1}" }
       ${AZ_2}: { id: "${PUBLIC_SUBNET_2}" }
 
-# Auto Mode — AWS manages Karpenter and node lifecycle.
-# Nodes scale to zero when idle; new nodes provision on pod scheduling pressure.
-autoModeConfig:
-  enabled: true
+iam:
+  withOIDC: true
+  serviceAccounts:
+    - metadata:
+        name: karpenter
+        namespace: karpenter
+      roleName: ${EKS_CLUSTER_NAME}-karpenter
+      attachPolicyARNs:
+        - arn:aws:iam::${AWS_ACCOUNT_ID}:policy/KarpenterControllerPolicy-${EKS_CLUSTER_NAME}
+      roleOnly: true
+
+# System node group — runs Karpenter and other system pods.
+# Karpenter then provisions all Ray/Anyscale workload nodes on demand.
+managedNodeGroups:
+  - name: system
+    instanceType: m5.large
+    minSize: 2
+    maxSize: 2
+    desiredCapacity: 2
+    privateNetworking: true
+    labels:
+      role: system
+    taints:
+      - key: CriticalAddonsOnly
+        value: "true"
+        effect: NoSchedule
+    iam:
+      withAddonPolicies:
+        autoScaler: false

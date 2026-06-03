@@ -10,18 +10,18 @@ spec:
         NodeGroupType: gpu-node-pool
     spec:
       nodeClassRef:
-        group: eks.amazonaws.com
-        kind: NodeClass
+        group: karpenter.k8s.aws
+        kind: EC2NodeClass
         name: default
       taints:
         - key: nvidia.com/gpu
           value: "Exists"
           effect: "NoSchedule"
       requirements:
-        - key: "eks.amazonaws.com/instance-family"
+        - key: "karpenter.k8s.aws/instance-family"
           operator: In
           values: ["g6"]
-        - key: "eks.amazonaws.com/instance-size"
+        - key: "karpenter.k8s.aws/instance-size"
           operator: In
           values: ["xlarge", "2xlarge", "4xlarge", "8xlarge", "12xlarge", "16xlarge", "48xlarge"]
         - key: "kubernetes.io/arch"
