@@ -168,7 +168,8 @@ EKSCTL_STACK=$(aws cloudformation describe-stacks \
 
 EC2_NODES=$(aws ec2 describe-instances --region "${REGION}" \
     --filters "Name=tag:aws:eks:cluster-name,Values=${CLUSTER_NAME}" "Name=instance-state-name,Values=running,pending,stopping" \
-    --query 'Reservations[].Instances[].InstanceId' --output text 2>/dev/null || echo "")
+    --query 'Reservations[].Instances[].InstanceId' --output text 2>/dev/null \
+    | grep -v '^$' | grep -v '^None$' || true)
 
 [[ "${CLUSTER_STATUS}" == "NOT_FOUND" ]] && echo "  ✅  EKS cluster deleted" || echo "  ❌  EKS cluster still exists (${CLUSTER_STATUS})"
 [[ "${EKSCTL_STACK}" == "NOT_FOUND" ]] && echo "  ✅  eksctl CloudFormation stack deleted" || echo "  ❌  eksctl stack still exists (${EKSCTL_STACK})"
