@@ -26,11 +26,14 @@ class EksRayStack(Stack):
                 ec2.SubnetConfiguration(
                     name="Public",
                     subnet_type=ec2.SubnetType.PUBLIC,
-                    cidr_mask=24,
+                    cidr_mask=24,  # 251 IPs — sufficient for load balancers
                 ),
                 ec2.SubnetConfiguration(
                     name="Private",
                     subnet_type=ec2.SubnetType.PRIVATE_WITH_EGRESS,
+                    # /24 = 251 usable IPs per AZ — fine for tutorials.
+                    # For production or large Ray clusters (many workers),
+                    # increase to cidr_mask=20 (4096 IPs) before first deploy.
                     cidr_mask=24,
                 ),
             ],
