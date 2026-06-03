@@ -41,6 +41,35 @@ export K8S_VERSION="${K8S_VERSION:-1.35}"
 INSTALL_GPU_NODEPOOL="${INSTALL_GPU_NODEPOOL:-false}"
 
 echo ""
+echo "── Pre-flight: Check for leftover AWS resources ────────────────────────"
+PREFLIGHT_FAIL=false
+
+CLUSTER_STATUS=$(aws eks describe-cluster --name "${EKS_CLUSTER_NAME}" --region "${AWS_REGION}" \
+    --query 'cluster.status' --output text 2>/dev/null || echo "NOT_FOUND")
+CDK_STACK_STATUS=$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" \
+    --region "${AWS_REGION}" --query 'Stacks[0].StackStatus' --output text 2>/dev/null || echo "NOT_FOUND")
+
+if [[ "${CLUSTER_STATUS}" != "NOT_FOUND" ]]; then
+    echo "  ❌  EKS cluster already exists (${CLUSTER_STATUS}) — run ./cluster/destroy.sh first"
+    PREFLIGHT_FAIL=true
+else
+    echo "  ✅  No existing EKS cluster"
+fi
+
+if [[ "${CDK_STACK_STATUS}" != "NOT_FOUND" ]]; then
+    echo "  ❌  CDK stack already exists (${CDK_STACK_STATUS}) — run ./cluster/destroy.sh first"
+    PREFLIGHT_FAIL=true
+else
+    echo "  ✅  No existing CDK stack"
+fi
+
+if [[ "${PREFLIGHT_FAIL}" == "true" ]]; then
+    echo ""
+    echo "Pre-flight failed. Aborting to avoid partial state."
+    exit 1
+fi
+echo ""
+
 echo "── STEP 1: Deploy VPC with CDK ─────────────────────────────────────────"
 cd "${REPO_ROOT}/infra"
 python3 -m venv .venv 2>/dev/null || true
