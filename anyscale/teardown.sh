@@ -46,6 +46,31 @@ fi
 if [[ -z "${CF_STACK}" ]]; then
     echo "  No Anyscale CloudFormation stack found — skipping."
 else
+    echo "  Found stack: ${CF_STACK}"
+
+    # Empty the versioned S3 bucket before deletion — CloudFormation cannot delete
+    # a non-empty versioned bucket and will leave the stack in DELETE_FAILED.
+    BUCKET=$(aws cloudformation list-stack-resources \
+        --stack-name "${CF_STACK}" --region "${AWS_REGION}" \
+        --query "StackResourceSummaries[?ResourceType=='AWS::S3::Bucket'].PhysicalResourceId" \
+        --output text 2>/dev/null || echo "")
+    if [[ -n "${BUCKET}" ]]; then
+        echo "  Emptying versioned S3 bucket: ${BUCKET}"
+        VERSIONS_JSON=$(aws s3api list-object-versions --bucket "${BUCKET}" \
+            --query '{Objects: Versions[].{Key:Key,VersionId:VersionId}, Quiet: true}' \
+            --output json 2>/dev/null || echo '{"Objects":null,"Quiet":true}')
+        if echo "${VERSIONS_JSON}" | grep -q '"Key"'; then
+            aws s3api delete-objects --bucket "${BUCKET}" --delete "${VERSIONS_JSON}" >/dev/null
+        fi
+        MARKERS_JSON=$(aws s3api list-object-versions --bucket "${BUCKET}" \
+            --query '{Objects: DeleteMarkers[].{Key:Key,VersionId:VersionId}, Quiet: true}' \
+            --output json 2>/dev/null || echo '{"Objects":null,"Quiet":true}')
+        if echo "${MARKERS_JSON}" | grep -q '"Key"'; then
+            aws s3api delete-objects --bucket "${BUCKET}" --delete "${MARKERS_JSON}" >/dev/null
+        fi
+        echo "  S3 bucket emptied."
+    fi
+
     echo "  Deleting stack: ${CF_STACK}"
     aws cloudformation delete-stack --stack-name "${CF_STACK}" --region "${AWS_REGION}"
     aws cloudformation wait stack-delete-complete --stack-name "${CF_STACK}" --region "${AWS_REGION}"

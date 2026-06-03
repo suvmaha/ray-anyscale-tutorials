@@ -36,14 +36,27 @@ fi
 echo ""
 echo "── STEP 2: Delete Karpenter IAM resources ──────────────────────────────"
 
+# Remove ALL instance profiles from KarpenterNodeRole — this covers both the
+# manually-created KarpenterNodeInstanceProfile-* and any auto-created profiles
+# Karpenter generates at runtime (eks-ray-platform_<hash>). Without this,
+# the role deletion fails with DeleteConflict.
+if aws iam get-role --role-name "${NODE_ROLE_NAME}" &>/dev/null; then
+    ATTACHED_PROFILES=$(aws iam list-instance-profiles-for-role \
+        --role-name "${NODE_ROLE_NAME}" \
+        --query 'InstanceProfiles[].InstanceProfileName' \
+        --output text 2>/dev/null || echo "")
+    for IP in ${ATTACHED_PROFILES}; do
+        aws iam remove-role-from-instance-profile \
+            --instance-profile-name "${IP}" --role-name "${NODE_ROLE_NAME}" 2>/dev/null || true
+        aws iam delete-instance-profile --instance-profile-name "${IP}"
+        echo "  Deleted instance profile: ${IP}"
+    done
+fi
+
+# Also delete the manually-created profile if it exists but wasn't attached (edge case).
 if aws iam get-instance-profile --instance-profile-name "${INSTANCE_PROFILE_NAME}" &>/dev/null; then
-    aws iam remove-role-from-instance-profile \
-        --instance-profile-name "${INSTANCE_PROFILE_NAME}" \
-        --role-name "${NODE_ROLE_NAME}" 2>/dev/null || true
-    aws iam delete-instance-profile --instance-profile-name "${INSTANCE_PROFILE_NAME}"
+    aws iam delete-instance-profile --instance-profile-name "${INSTANCE_PROFILE_NAME}" 2>/dev/null || true
     echo "  Deleted: ${INSTANCE_PROFILE_NAME}"
-else
-    echo "  Instance profile not found — skipping."
 fi
 
 if aws iam get-role --role-name "${NODE_ROLE_NAME}" &>/dev/null; then
@@ -74,6 +87,30 @@ fi
 
 echo ""
 echo "── STEP 3: Destroy CDK stack (VPC) ─────────────────────────────────────"
+
+# Delete stale ENIs before CDK destroy — VPC CNI and terminated Karpenter nodes
+# leave ENIs in 'available' state that block subnet deletion (DELETE_FAILED).
+VPC_ID=$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" \
+    --region "${REGION}" \
+    --query "Stacks[0].Outputs[?OutputKey=='VpcId'].OutputValue" \
+    --output text 2>/dev/null || echo "")
+if [[ -n "${VPC_ID}" ]]; then
+    STALE_ENIS=$(aws ec2 describe-network-interfaces \
+        --region "${REGION}" \
+        --filters "Name=vpc-id,Values=${VPC_ID}" "Name=status,Values=available" \
+        --query 'NetworkInterfaces[].NetworkInterfaceId' \
+        --output text 2>/dev/null || echo "")
+    if [[ -n "${STALE_ENIS}" ]]; then
+        echo "  Deleting stale ENIs in VPC ${VPC_ID}:"
+        for ENI in ${STALE_ENIS}; do
+            aws ec2 delete-network-interface --network-interface-id "${ENI}" --region "${REGION}"
+            echo "    Deleted: ${ENI}"
+        done
+    else
+        echo "  No stale ENIs found."
+    fi
+fi
+
 cd "${REPO_ROOT}/infra"
 source .venv/bin/activate
 cdk destroy --force
