@@ -32,7 +32,7 @@ ray-anyscale-tutorials/
 │   ├── karpenter-iam-policy.json.template  IAM policy for Karpenter controller
 │   ├── karpenter-nodepool.yaml.template    EC2NodeClass + Anyscale NodePool
 │   ├── gpu-nodepool.yaml                   Optional GPU NodePool (g6/L4)
-│   ├── create.sh                           CDK + eksctl + Karpenter Helm install
+│   ├── create.sh                           CDK + eksctl + Karpenter + nginx ingress
 │   └── destroy.sh                          EKS cluster + VPC teardown
 ├── anyscale/                     Anyscale platform setup
 │   ├── setup.sh                  Register EKS cluster with Anyscale

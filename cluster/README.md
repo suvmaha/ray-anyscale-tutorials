@@ -10,6 +10,7 @@ Creates an EKS cluster with self-managed Karpenter for running Ray and Anyscale 
 | System node group | 2x m5.large (fixed, runs Karpenter + system pods) |
 | Karpenter | Self-managed, installed via Helm — provisions workload nodes on demand |
 | Anyscale NodePool | On-demand m/c/r-family instances, scale to zero when idle |
+| nginx ingress | Exposes Ray head node so Anyscale can register DNS |
 | GPU NodePool | Optional — g6 instances (NVIDIA L4), apply when tutorials need GPUs |
 | VPC | Provisioned by CDK in `infra/` — 2 AZs, public + private subnets |
 
@@ -29,7 +30,7 @@ Ray distributes Python workloads across a cluster of machines. Anyscale manages 
 ## Scripts
 
 ```bash
-./cluster/create.sh                            # Deploy VPC (CDK) + create EKS cluster + install Karpenter
+./cluster/create.sh                            # Deploy VPC (CDK) + EKS cluster + Karpenter + nginx ingress
 INSTALL_GPU_NODEPOOL=true ./cluster/create.sh  # Same + apply GPU NodePool for LLM tutorials
 ./cluster/destroy.sh                           # Tear down cluster + VPC
 ```
@@ -40,8 +41,8 @@ INSTALL_GPU_NODEPOOL=true ./cluster/create.sh  # Same + apply GPU NodePool for L
 |------|---------|
 | `cluster.yaml.template` | eksctl cluster definition (VPC, system node group, Karpenter IRSA) |
 | `karpenter-iam-policy.json.template` | IAM policy for Karpenter controller — created in STEP 3 |
-| `karpenter-nodepool.yaml.template` | EC2NodeClass + Anyscale NodePool — applied in STEP 9 |
-| `gpu-nodepool.yaml` | Optional GPU NodePool (g6/L4) — applied in STEP 10 |
+| `karpenter-nodepool.yaml.template` | EC2NodeClass + Anyscale NodePool — applied in STEP 10 |
+| `gpu-nodepool.yaml` | Optional GPU NodePool (g6/L4) — applied in STEP 13 |
 
 ## Next Steps
 
