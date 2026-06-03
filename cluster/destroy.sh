@@ -8,8 +8,9 @@
 #
 # Order:
 #   1. Delete EKS cluster (eksctl)
-#   2. Destroy CDK stack (VPC)
-#   3. Optionally delete ray-* ECR repositories
+#   2. Delete Karpenter IAM resources (policy, node role, instance profile)
+#   3. Destroy CDK stack (VPC)
+#   4. Optionally delete ray-* ECR repositories
 
 set -euo pipefail
 
