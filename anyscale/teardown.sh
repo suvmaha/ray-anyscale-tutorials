@@ -63,17 +63,21 @@ else
             --output text 2>/dev/null || echo "")
         if [[ -n "${BUCKET}" ]]; then
             echo "  Emptying versioned S3 bucket: ${BUCKET}"
-            VERSIONS_JSON=$(aws s3api list-object-versions --bucket "${BUCKET}" \
-                --query '{Objects: Versions[].{Key:Key,VersionId:VersionId}, Quiet: true}' \
-                --output json 2>/dev/null || echo '{"Objects":null,"Quiet":true}')
-            if echo "${VERSIONS_JSON}" | grep -q '"Key"'; then
-                aws s3api delete-objects --bucket "${BUCKET}" --delete "${VERSIONS_JSON}" >/dev/null
+            # Build delete JSON manually — JMESPath treats `true` as a field
+            # reference (returns null), not a boolean literal.
+            VERSIONS=$(aws s3api list-object-versions --bucket "${BUCKET}" \
+                --query 'Versions[].{Key:Key,VersionId:VersionId}' \
+                --output json 2>/dev/null || echo "null")
+            if [[ "${VERSIONS}" != "null" && "${VERSIONS}" != "[]" ]]; then
+                aws s3api delete-objects --bucket "${BUCKET}" \
+                    --delete "{\"Objects\":${VERSIONS},\"Quiet\":true}" >/dev/null
             fi
-            MARKERS_JSON=$(aws s3api list-object-versions --bucket "${BUCKET}" \
-                --query '{Objects: DeleteMarkers[].{Key:Key,VersionId:VersionId}, Quiet: true}' \
-                --output json 2>/dev/null || echo '{"Objects":null,"Quiet":true}')
-            if echo "${MARKERS_JSON}" | grep -q '"Key"'; then
-                aws s3api delete-objects --bucket "${BUCKET}" --delete "${MARKERS_JSON}" >/dev/null
+            MARKERS=$(aws s3api list-object-versions --bucket "${BUCKET}" \
+                --query 'DeleteMarkers[].{Key:Key,VersionId:VersionId}' \
+                --output json 2>/dev/null || echo "null")
+            if [[ "${MARKERS}" != "null" && "${MARKERS}" != "[]" ]]; then
+                aws s3api delete-objects --bucket "${BUCKET}" \
+                    --delete "{\"Objects\":${MARKERS},\"Quiet\":true}" >/dev/null
             fi
             echo "  S3 bucket emptied."
         fi
