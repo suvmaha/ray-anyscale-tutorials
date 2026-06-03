@@ -249,6 +249,7 @@ helm upgrade --install karpenter \
     --namespace karpenter --create-namespace \
     --set "settings.clusterName=${EKS_CLUSTER_NAME}" \
     --set "settings.clusterEndpoint=${CLUSTER_ENDPOINT}" \
+    --set "replicas=1" \
     --set "controller.resources.requests.cpu=200m" \
     --set "controller.resources.requests.memory=512Mi" \
     --set "serviceAccount.annotations.eks\.amazonaws\.com/role-arn=${KARPENTER_ROLE_ARN}" \
