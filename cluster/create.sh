@@ -88,7 +88,7 @@ printf "║  Public subnet  : %-50s║\n" "${PUBLIC_SUBNET_1} (${AZ_1})"
 printf "║  Public subnet  : %-50s║\n" "${PUBLIC_SUBNET_2} (${AZ_2})"
 echo "╠══════════════════════════════════════════════════════════════════════╣"
 printf "║  Node mode      : %-50s║\n" "Self-managed Karpenter ${KARPENTER_VERSION}"
-printf "║  System nodes   : %-50s║\n" "2x m5.large (fixed, CriticalAddonsOnly taint)"
+printf "║  System nodes   : %-50s║\n" "2x m5.large (fixed)"
 printf "║  Workload nodes : %-50s║\n" "Karpenter on-demand (scale to zero)"
 printf "║  GPU NodePool   : %-50s║\n" "${INSTALL_GPU_NODEPOOL} (set INSTALL_GPU_NODEPOOL=true for LLM jobs)"
 echo "╚══════════════════════════════════════════════════════════════════════╝"
@@ -205,9 +205,8 @@ helm upgrade --install karpenter \
     --namespace karpenter --create-namespace \
     --set "settings.clusterName=${EKS_CLUSTER_NAME}" \
     --set "settings.clusterEndpoint=${CLUSTER_ENDPOINT}" \
-    --set "controller.resources.requests.cpu=1" \
-    --set "controller.resources.requests.memory=1Gi" \
-    --set "controller.resources.limits.cpu=1" \
+    --set "controller.resources.requests.cpu=500m" \
+    --set "controller.resources.requests.memory=512Mi" \
     --set "controller.resources.limits.memory=1Gi" \
     --set "serviceAccount.annotations.eks\.amazonaws\.com/role-arn=${KARPENTER_ROLE_ARN}" \
     --set "tolerations[0].key=CriticalAddonsOnly" \

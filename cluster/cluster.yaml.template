@@ -42,10 +42,6 @@ managedNodeGroups:
     privateNetworking: true
     labels:
       role: system
-    taints:
-      - key: CriticalAddonsOnly
-        value: "true"
-        effect: NoSchedule
     iam:
       withAddonPolicies:
         autoScaler: false
