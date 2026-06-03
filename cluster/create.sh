@@ -11,9 +11,11 @@
 #   6.  Associate IAM OIDC provider (enables IRSA)
 #   7.  Tag subnets + cluster security group for Karpenter node discovery
 #   8.  Install Karpenter via Helm
-#   9.  Apply EC2NodeClass + Anyscale NodePool
-#  10.  Optionally apply GPU NodePool (g6/L4 — for LLM tutorials)
-#  11.  Verify
+#   9.  Install Karpenter via Helm
+#  10.  Apply EC2NodeClass + Anyscale NodePool
+#  11.  Install nginx ingress controller (required for Anyscale DNS registration)
+#  12.  Optionally apply GPU NodePool (g6/L4 — for LLM tutorials)
+#  13.  Verify
 #
 # Default:              ./cluster/create.sh
 # With GPU NodePool:    INSTALL_GPU_NODEPOOL=true ./cluster/create.sh
@@ -233,7 +235,17 @@ envsubst < "${REPO_ROOT}/cluster/karpenter-nodepool.yaml.template" | kubectl app
 echo "EC2NodeClass and Anyscale NodePool applied."
 
 echo ""
-echo "── STEP 11: Apply GPU NodePool (optional) ──────────────────────────────"
+echo "── STEP 11: Install nginx ingress controller ───────────────────────────"
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx 2>/dev/null || true
+helm repo update ingress-nginx
+helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
+    --namespace ingress-nginx --create-namespace \
+    --set controller.replicaCount=1 \
+    --wait
+echo "nginx ingress controller installed — Anyscale can register DNS for Ray head nodes."
+
+echo ""
+echo "── STEP 13: Apply GPU NodePool (optional) ──────────────────────────────"
 if [[ "${INSTALL_GPU_NODEPOOL}" == "true" ]]; then
     kubectl apply -f "${REPO_ROOT}/cluster/gpu-nodepool.yaml"
     echo "GPU NodePool (g6/L4) applied — Karpenter will provision nodes on demand."
@@ -243,7 +255,7 @@ else
 fi
 
 echo ""
-echo "── STEP 12: Verify ─────────────────────────────────────────────────────"
+echo "── STEP 14: Verify ─────────────────────────────────────────────────────"
 kubectl get nodes
 echo ""
 echo "EKS cluster ${EKS_CLUSTER_NAME} is ready."

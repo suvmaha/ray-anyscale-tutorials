@@ -37,7 +37,7 @@ echo "── Setting up Anyscale on EKS ─────────────�
 echo "Prompts to watch for:"
 echo "  Name       → type '${ANYSCALE_CLOUD_NAME}' (the cloud name for this cluster)"
 echo "  Namespace  → press Enter to accept 'anyscale-operator'"
-echo "  Ingress    → type 'n' to skip nginx ingress — it is deprecated per Anyscale docs"
+echo "  Ingress    → type 'n' — nginx ingress is already installed by cluster/create.sh"
 echo ""
 
 anyscale cloud setup \
