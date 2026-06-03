@@ -27,11 +27,13 @@ Hands-on tutorials for Distributed AI with Ray and Anyscale on Amazon EKS. One b
 ```
 ray-anyscale-tutorials/
 ├── infra/                        CDK VPC stack (2 AZs, 1 NAT gateway)
-├── cluster/                      EKS cluster lifecycle
-│   ├── cluster.yaml.template     eksctl EKS Auto Mode config
-│   ├── create.sh                 CDK + eksctl cluster creation
-│   ├── gpu-nodepool.yaml         Karpenter NodePool for g6/L4 GPU nodes
-│   └── destroy.sh                EKS cluster + VPC teardown
+├── cluster/                                EKS cluster lifecycle
+│   ├── cluster.yaml.template               eksctl cluster config (system node group + Karpenter IRSA)
+│   ├── karpenter-iam-policy.json.template  IAM policy for Karpenter controller
+│   ├── karpenter-nodepool.yaml.template    EC2NodeClass + Anyscale NodePool
+│   ├── gpu-nodepool.yaml                   Optional GPU NodePool (g6/L4)
+│   ├── create.sh                           CDK + eksctl + Karpenter Helm install
+│   └── destroy.sh                          EKS cluster + VPC teardown
 ├── anyscale/                     Anyscale platform setup
 │   ├── setup.sh                  Register EKS cluster with Anyscale
 │   └── teardown.sh               Deregister cluster + cleanup
@@ -65,8 +67,8 @@ ray-anyscale-tutorials/
 # 2. Wire Anyscale to the cluster
 ./anyscale/setup.sh
 
-# 3. Submit tutorial job
-./tutorials/llm-batch-inference/submit.sh
+# 3. Submit tutorial job (Tutorial 01 — Hello World)
+./tutorials/job-hello-world/submit.sh
 
 # 4. Remove Anyscale
 ./anyscale/teardown.sh
@@ -110,8 +112,9 @@ Provisions `g6` instances (NVIDIA L4 GPU) via Karpenter. Scales to zero when idl
 
 | Tutorial | Path | Ray Library | Blog |
 |----------|------|-------------|------|
-| [llm-batch-inference](tutorials/llm-batch-inference/) | Anyscale | Ray Data | AI-ML on AWS #7 |
-| [mcp-ray-serve](kuberay/tutorials/mcp-ray-serve/) | KubeRay | Ray Serve | AI-ML on AWS #8 |
+| [job-hello-world](tutorials/job-hello-world/) | Anyscale | Ray Core | Tutorial 01 |
+| [llm-batch-inference](tutorials/llm-batch-inference/) | Anyscale | Ray Data | Tutorial 02 |
+| [mcp-ray-serve](kuberay/tutorials/mcp-ray-serve/) | KubeRay | Ray Serve | Tutorial 03 |
 
 ## Cost
 
