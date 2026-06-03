@@ -36,6 +36,19 @@
             }
         },
         {
+            "Sid": "InstanceProfileManagement",
+            "Effect": "Allow",
+            "Action": [
+                "iam:GetInstanceProfile",
+                "iam:CreateInstanceProfile",
+                "iam:DeleteInstanceProfile",
+                "iam:AddRoleToInstanceProfile",
+                "iam:RemoveRoleFromInstanceProfile",
+                "iam:TagInstanceProfile"
+            ],
+            "Resource": "*"
+        },
+        {
             "Sid": "PassNodeIAMRole",
             "Effect": "Allow",
             "Action": "iam:PassRole",
