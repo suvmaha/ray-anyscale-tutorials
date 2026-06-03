@@ -14,9 +14,12 @@ TEARDOWN_START=$(date +%s)
 TEARDOWN_START_LABEL=$(date '+%H:%M:%S')
 
 echo "── STEP 1: Delete Anyscale cloud registration ──────────────────────────"
-anyscale cloud delete --name "${ANYSCALE_CLOUD_NAME}" --yes 2>/dev/null \
-    && echo "  Cloud deleted: ${ANYSCALE_CLOUD_NAME}" \
-    || echo "  Cloud not found — skipping."
+if anyscale cloud list 2>/dev/null | grep -q "${ANYSCALE_CLOUD_NAME}"; then
+    anyscale cloud delete --name "${ANYSCALE_CLOUD_NAME}" --yes
+    echo "  Cloud deleted: ${ANYSCALE_CLOUD_NAME}"
+else
+    echo "  Cloud not found — skipping."
+fi
 
 echo ""
 echo "── STEP 2: Uninstall Anyscale operator ─────────────────────────────────"
