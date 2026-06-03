@@ -190,6 +190,11 @@ echo "  Tagged cluster SG: ${CLUSTER_SG}"
 echo ""
 echo "── STEP 8: Install Karpenter via Helm ──────────────────────────────────"
 
+ECR_PASSWORD=$(aws ecr-public get-login-password --region us-east-1)
+echo "${ECR_PASSWORD}" | docker login --username AWS --password-stdin public.ecr.aws
+echo "${ECR_PASSWORD}" | helm registry login --username AWS --password-stdin public.ecr.aws
+echo "Authenticated to public ECR."
+
 CLUSTER_ENDPOINT=$(aws eks describe-cluster --name "${EKS_CLUSTER_NAME}" \
     --region "${AWS_REGION}" --query 'cluster.endpoint' --output text)
 KARPENTER_ROLE_ARN="arn:aws:iam::${AWS_ACCOUNT_ID}:role/${EKS_CLUSTER_NAME}-karpenter"
