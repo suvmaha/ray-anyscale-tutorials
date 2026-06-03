@@ -28,11 +28,20 @@ fi
 
 echo ""
 echo "── STEP 3: Delete Anyscale CloudFormation stack ────────────────────────"
-# anyscale cloud setup creates a stack — find it by tag
-CF_STACK=$(aws cloudformation describe-stacks \
+# anyscale cloud setup creates a stack named k8s-<cloud-name>-<id>.
+# Search by name prefix first, fall back to tag search.
+CF_STACK=$(aws cloudformation list-stacks \
     --region "${AWS_REGION}" \
-    --query "Stacks[?Tags[?Key=='anyscale-cluster-name'&&Value=='${EKS_CLUSTER_NAME}']].StackName" \
+    --stack-status-filter CREATE_COMPLETE UPDATE_COMPLETE \
+    --query "StackSummaries[?starts_with(StackName,'k8s-${ANYSCALE_CLOUD_NAME}-')].StackName" \
     --output text 2>/dev/null || echo "")
+
+if [[ -z "${CF_STACK}" ]]; then
+    CF_STACK=$(aws cloudformation describe-stacks \
+        --region "${AWS_REGION}" \
+        --query "Stacks[?Tags[?Key=='anyscale-cluster-name'&&Value=='${EKS_CLUSTER_NAME}']].StackName" \
+        --output text 2>/dev/null || echo "")
+fi
 
 if [[ -z "${CF_STACK}" ]]; then
     echo "  No Anyscale CloudFormation stack found — skipping."
