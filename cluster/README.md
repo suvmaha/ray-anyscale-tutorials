@@ -7,7 +7,7 @@ Creates an EKS cluster with self-managed Karpenter for running Ray and Anyscale 
 | Resource | Detail |
 |----------|--------|
 | EKS cluster | Standard mode, Kubernetes 1.35 |
-| System node group | 2x m5.large (fixed, runs Karpenter + system pods) |
+| System node group | 2x m5.xlarge (fixed, runs Karpenter + system pods) |
 | Karpenter | Self-managed, installed via Helm — provisions workload nodes on demand |
 | Anyscale NodePool | On-demand m/c/r-family instances, scale to zero when idle |
 | nginx ingress | Exposes Ray head node so Anyscale can register DNS |
@@ -42,7 +42,8 @@ INSTALL_GPU_NODEPOOL=true ./cluster/create.sh  # Same + apply GPU NodePool for L
 | `cluster.yaml.template` | eksctl cluster definition (VPC, system node group, Karpenter IRSA) |
 | `karpenter-iam-policy.json.template` | IAM policy for Karpenter controller — created in STEP 3 |
 | `karpenter-nodepool.yaml.template` | EC2NodeClass + Anyscale NodePool — applied in STEP 10 |
-| `gpu-nodepool.yaml` | Optional GPU NodePool (g6/L4) — applied in STEP 13 |
+| `gpu-nodepool.yaml` | Optional GPU NodePool (g6/L4) — applied in STEP 12 |
+| `nvidia-device-plugin.yaml` | NVIDIA device plugin DaemonSet — exposes `nvidia.com/gpu` resource on GPU nodes |
 
 ## Next Steps
 

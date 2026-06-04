@@ -276,10 +276,13 @@ helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
 echo "nginx ingress controller installed — Anyscale can register DNS for Ray head nodes."
 
 echo ""
-echo "── STEP 12: Apply GPU NodePool (optional) ──────────────────────────────"
+echo "── STEP 12: Apply GPU NodePool + NVIDIA device plugin (optional) ───────"
 if [[ "${INSTALL_GPU_NODEPOOL}" == "true" ]]; then
     kubectl apply -f "${REPO_ROOT}/cluster/gpu-nodepool.yaml"
     echo "GPU NodePool (g6/L4) applied — Karpenter will provision nodes on demand."
+
+    kubectl apply -f "${REPO_ROOT}/cluster/nvidia-device-plugin.yaml"
+    echo "NVIDIA device plugin installed — exposes nvidia.com/gpu resource on GPU nodes."
 else
     echo "Skipped (INSTALL_GPU_NODEPOOL=false)."
     echo "For LLM tutorials: INSTALL_GPU_NODEPOOL=true ./cluster/create.sh"

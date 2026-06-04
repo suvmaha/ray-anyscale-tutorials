@@ -18,8 +18,9 @@ After setup, your cluster appears in the Anyscale console at console.anyscale.co
 
 The `anyscale cloud setup` command is interactive:
 
+- **Name** — type `eks-ray-cloud` (the cloud name for this cluster)
 - **Namespace** — press Enter to accept `anyscale-operator`
-- **Ingress** — type `n` to skip nginx ingress. Anyscale docs mark it as deprecated. Skip it here and configure Envoy Gateway separately if needed.
+- **Ingress** — type `n` — nginx ingress is already installed by `cluster/create.sh`, skip re-installing it here
 
 ## Scripts
 
