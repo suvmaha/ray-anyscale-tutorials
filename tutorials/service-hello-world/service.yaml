@@ -1,0 +1,14 @@
+name: service-hello-world
+
+cloud: eks-ray-cloud
+
+compute_config:
+  head_node:
+    required_resources:
+      CPU: 2
+      memory: 8Gi
+
+working_dir: .
+
+applications:
+  - import_path: main:app_deploy
