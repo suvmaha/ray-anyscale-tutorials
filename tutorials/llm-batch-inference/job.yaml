@@ -2,14 +2,17 @@ name: llm-batch-inference
 entrypoint: python batch_inference_text.py
 image_uri: anyscale/ray-llm:2.55.1-py311-cu128
 compute_config:
+  zones:
+    - us-east-1a
+    - us-east-1b
   head_node:
     required_resources:
       CPU: 8
       memory: 32Gi
   worker_nodes:
     - required_resources:
-        CPU: 8
-        memory: 32Gi
+        CPU: 4
+        memory: 16Gi
         GPU: 1
       required_labels:
         ray.io/accelerator-type: L4
