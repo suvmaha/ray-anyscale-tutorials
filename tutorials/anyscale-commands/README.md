@@ -74,6 +74,16 @@ anyscale service list
 anyscale service status --name <service-name>
 ```
 
+### Watch rollout (poll every 10s)
+```bash
+watch -n 10 anyscale service status --name <service-name>
+```
+
+### Wait for a target state (blocks until done)
+```bash
+anyscale service wait --name <service-name> --state RUNNING
+```
+
 ### Logs and rollout history
 ```bash
 # Service logs are in the Anyscale console:
