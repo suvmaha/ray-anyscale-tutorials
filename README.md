@@ -55,8 +55,20 @@ ray-anyscale-tutorials/
 | kubectl | Kubernetes operations |
 | helm ≥ 3 | Operator installation |
 | docker | Tutorial image builds (KubeRay path) |
-| Python 3.11 | CDK, Anyscale CLI |
+| Python 3.11+ | CDK, Anyscale CLI, tutorial scripts |
 | anyscale CLI | `pipx install anyscale` (Anyscale path) |
+
+### Local Python Setup
+
+Tutorial query scripts (`query.py`, etc.) need a local venv with `requests`:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+After activation `python` and `python3` both work. The `.venv/` directory is gitignored.
 
 ## Anyscale Path
 
@@ -110,11 +122,12 @@ Provisions `g6` instances (NVIDIA L4 GPU) via Karpenter. Scales to zero when idl
 
 ## Tutorials
 
-| Tutorial | Path | Ray Library | Blog |
-|----------|------|-------------|------|
-| [job-hello-world](tutorials/job-hello-world/) | Anyscale | Ray Core | Tutorial 01 |
-| [llm-batch-inference](tutorials/llm-batch-inference/) | Anyscale | Ray Data | Tutorial 02 |
-| [mcp-ray-serve](kuberay/tutorials/mcp-ray-serve/) | KubeRay | Ray Serve | Tutorial 03 |
+| Tutorial | Path | Ray Library | Notes |
+|----------|------|-------------|-------|
+| [job-hello-world](tutorials/job-hello-world/) | Anyscale | Ray Core | CPU only |
+| [llm-batch-inference](tutorials/llm-batch-inference/) | Anyscale | Ray Data + vLLM | GPU required |
+| [service-hello-world](tutorials/service-hello-world/) | Anyscale | Ray Serve | Always-on REST API |
+| [mcp-ray-serve](kuberay/tutorials/mcp-ray-serve/) | KubeRay | Ray Serve | FastMCP server |
 
 ## Cost
 

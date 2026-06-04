@@ -85,7 +85,7 @@ anyscale service logs --name <service-name>
 curl -H "Authorization: Bearer <TOKEN>" <BASE_URL>/hello?name=World
 
 # Or via Python
-python tutorials/service-hello-world/query.py --token <TOKEN> --url <BASE_URL>
+python3 tutorials/service-hello-world/query.py --token <TOKEN> --url <BASE_URL>
 ```
 
 ### Terminate a service

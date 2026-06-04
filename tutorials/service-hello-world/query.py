@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
+
 """Query the running service-hello-world endpoint.
 
 Usage:
-    python query.py --token <SERVICE_TOKEN> --url <BASE_URL>
+    python3 query.py --token <SERVICE_TOKEN> --url <BASE_URL>
 
 The deploy output prints a line like:
     curl -H "Authorization: Bearer <TOKEN>" <BASE_URL>

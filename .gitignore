@@ -8,6 +8,7 @@ cluster/cluster.yaml
 tutorials/*/ray-service.yaml
 
 # Python
+.venv/
 __pycache__/
 *.pyc
 *.pyo

@@ -27,7 +27,7 @@ curl -H "Authorization: Bearer <TOKEN>" <BASE_URL>
 ## Query
 
 ```bash
-python tutorials/service-hello-world/query.py --token <TOKEN> --url <BASE_URL>
+python3 tutorials/service-hello-world/query.py --token <TOKEN> --url <BASE_URL>
 ```
 
 ## Monitor
