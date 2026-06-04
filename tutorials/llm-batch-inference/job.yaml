@@ -5,6 +5,7 @@ compute_config:
   head_node:
     required_resources:
       CPU: 8
+      memory: 32Gi
   worker_nodes:
     - instance_type: g6.2xlarge
       min_nodes: 0
