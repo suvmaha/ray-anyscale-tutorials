@@ -11,7 +11,9 @@ SERVICE_NAME="service-hello-world"
 echo "Deploying ${SERVICE_NAME} to cloud: ${ANYSCALE_CLOUD_NAME}"
 echo ""
 
-anyscale service deploy -f "${TUTORIAL_DIR}/service.yaml"
+# cd into the tutorial dir so working_dir: . in service.yaml resolves to this folder
+cd "${TUTORIAL_DIR}"
+anyscale service deploy -f service.yaml
 
 echo ""
 echo "Service deployed. Check status:"
@@ -19,7 +21,7 @@ echo "  anyscale service list"
 echo "  anyscale service status --name ${SERVICE_NAME}"
 echo ""
 echo "Query the service (get token + URL from the deploy output above):"
-echo "  python ${TUTORIAL_DIR}/query.py --token <TOKEN> --url <BASE_URL>"
+echo "  python3 ${TUTORIAL_DIR}/query.py --token <TOKEN> --url <BASE_URL>"
 echo ""
 echo "Monitor: https://console.anyscale.com/services"
 echo ""
