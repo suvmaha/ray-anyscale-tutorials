@@ -1,3 +1,24 @@
+apiVersion: karpenter.k8s.aws/v1
+kind: EC2NodeClass
+metadata:
+  name: gpu
+spec:
+  amiSelectorTerms:
+    - alias: al2023@latest
+  role: "KarpenterNodeRole-eks-ray-platform"
+  blockDeviceMappings:
+    - deviceName: /dev/xvda
+      ebs:
+        volumeSize: 200Gi
+        volumeType: gp3
+        deleteOnTermination: true
+  subnetSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: "eks-ray-platform"
+  securityGroupSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: "eks-ray-platform"
+---
 apiVersion: karpenter.sh/v1
 kind: NodePool
 metadata:
@@ -12,7 +33,7 @@ spec:
       nodeClassRef:
         group: karpenter.k8s.aws
         kind: EC2NodeClass
-        name: default
+        name: gpu
       taints:
         - key: nvidia.com/gpu
           value: "Exists"
