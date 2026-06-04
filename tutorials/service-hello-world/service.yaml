@@ -8,11 +8,6 @@ compute_config:
       CPU: 2
       memory: 8Gi
 
-runtime_env:
-  pip:
-    - fastapi
-    - uvicorn
-
 working_dir: .
 
 applications:
