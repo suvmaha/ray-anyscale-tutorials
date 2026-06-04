@@ -74,9 +74,14 @@ anyscale service list
 anyscale service status --name <service-name>
 ```
 
-### Rollout history
+### Logs and rollout history
 ```bash
-anyscale service logs --name <service-name>
+# Service logs are in the Anyscale console:
+# console.anyscale.com/services → click service → Logs tab
+
+# Or via kubectl (get pod name first):
+kubectl get pods -n anyscale-operator
+kubectl logs <pod-name> -n anyscale-operator
 ```
 
 ### Query a running service
