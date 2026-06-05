@@ -79,13 +79,17 @@ After activation `python` and `python3` both work. The `.venv/` directory is git
 # 2. Wire Anyscale to the cluster
 ./anyscale/setup.sh
 
-# 3. Submit tutorial job (Hello World)
-./tutorials/job-hello-world/submit.sh
+# 3. Run tutorials
+#    See tutorials/README.md for the full list
 
-# 4. Remove Anyscale
+# 4. Terminate any running services before teardown
+anyscale service list
+anyscale service terminate --name <service-name>
+
+# 5. Remove Anyscale
 ./anyscale/teardown.sh
 
-# 5. Tear down cluster
+# 6. Tear down cluster
 ./cluster/destroy.sh
 ```
 
