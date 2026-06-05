@@ -29,6 +29,7 @@ spec:
       labels:
         type: karpenter
         NodeGroupType: gpu-node-pool
+        nvidia.com/gpu.product: NVIDIA-L4
     spec:
       nodeClassRef:
         group: karpenter.k8s.aws
