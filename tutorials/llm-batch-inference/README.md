@@ -18,11 +18,29 @@ Classify 10,000 company names by industry using Llama-3.1-8B-Instruct and Ray Da
 
 ## Prerequisites
 
-- EKS cluster with GPU NodePool — `INSTALL_GPU_NODEPOOL=true ./cluster/create.sh`
+- EKS cluster running — `./cluster/create.sh`
 - Anyscale connected — `./anyscale/setup.sh`
-- AWS account G-instance vCPU quota ≥ 8 (default; request increase for more workers)
+- AWS account G-instance vCPU quota ≥ 8 (see [Quota Note](#aws-gpu-quota-note) below)
 
-## Run
+## Step 1 — Add GPU NodePool
+
+If you created the cluster without `INSTALL_GPU_NODEPOOL=true`, add the GPU NodePool now:
+
+```bash
+kubectl apply -f cluster/gpu-nodepool.yaml
+kubectl apply -f cluster/nvidia-device-plugin.yaml
+```
+
+Verify:
+
+```bash
+kubectl get nodepools
+# should show: anyscale-gpu   Ready
+```
+
+> If you created the cluster with `INSTALL_GPU_NODEPOOL=true ./cluster/create.sh`, the NodePool is already present — skip this step.
+
+## Step 2 — Run
 
 ```bash
 ./tutorials/llm-batch-inference/submit.sh
@@ -45,4 +63,4 @@ The default AWS quota for G-instance vCPUs is 8 (`Running On-Demand G and VT ins
 
 ## What's Next
 
-- **Tutorial 03** — MCP server on Ray Serve (KubeRay path)
+- **Tutorial 03** — Hello World Service (Ray Serve + Anyscale Services, CPU)
