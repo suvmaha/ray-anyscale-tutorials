@@ -171,7 +171,14 @@ kubectl describe node <node-name> | grep -A 10 "Capacity:\|Allocatable:\|nvidia"
 
 ### Check NVIDIA device plugin
 ```bash
+# Running on GPU node = healthy; CrashLoopBackOff on CPU nodes = expected (no GPU hardware)
 kubectl get pods -n kube-system | grep nvidia
+```
+
+### Ray cluster resource state (nodes, GPU allocation, pending demands)
+```bash
+# Replace <head-pod> with the 6/6 Running pod (no GPU) in anyscale-operator
+kubectl exec -it <head-pod> -n anyscale-operator -c ray -- ray status
 ```
 
 ---
