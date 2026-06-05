@@ -273,6 +273,7 @@ helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
     --namespace ingress-nginx --create-namespace \
     --set controller.replicaCount=1 \
     --set controller.config.allow-snippet-annotations=true \
+    --set controller.config.annotations-risk-level=Critical \
     --wait
 echo "nginx ingress controller installed — Anyscale can register DNS for Ray head nodes."
 
