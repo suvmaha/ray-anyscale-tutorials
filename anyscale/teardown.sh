@@ -63,11 +63,27 @@ else
             --output text 2>/dev/null || echo "")
         if [[ -n "${BUCKET}" ]]; then
             echo "  Emptying versioned S3 bucket: ${BUCKET}"
-            # boto3 handles pagination and the 1000-object delete-objects batch limit.
-            # Pure AWS CLI approaches (inline JSON or temp file) fail on large versioned buckets.
+            # stdlib only — no boto3 needed. Paginates list-object-versions and
+            # batches delete-objects at 1000 (the API limit) per call.
             python3 - "${BUCKET}" <<'PYEOF'
-import sys, boto3
-boto3.resource("s3").Bucket(sys.argv[1]).object_versions.all().delete()
+import json, subprocess, sys
+bucket = sys.argv[1]
+paginator_args = ["aws", "s3api", "list-object-versions", "--bucket", bucket, "--output", "json"]
+token = None
+while True:
+    cmd = paginator_args + (["--next-token", token] if token else [])
+    out = subprocess.run(cmd, capture_output=True, text=True).stdout.strip()
+    data = json.loads(out) if out else {}
+    objects = [{"Key": v["Key"], "VersionId": v["VersionId"]}
+               for v in data.get("Versions", []) + data.get("DeleteMarkers", [])]
+    for i in range(0, len(objects), 1000):
+        subprocess.run(
+            ["aws", "s3api", "delete-objects", "--bucket", bucket,
+             "--delete", json.dumps({"Objects": objects[i:i+1000], "Quiet": True})],
+            check=True, capture_output=True)
+    token = data.get("NextVersionIdMarker") or data.get("NextKeyMarker")
+    if not token:
+        break
 PYEOF
             echo "  S3 bucket emptied."
         fi
