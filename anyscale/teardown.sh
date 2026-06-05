@@ -63,22 +63,9 @@ else
             --output text 2>/dev/null || echo "")
         if [[ -n "${BUCKET}" ]]; then
             echo "  Emptying versioned S3 bucket: ${BUCKET}"
-            # Build delete JSON manually — JMESPath treats `true` as a field
-            # reference (returns null), not a boolean literal.
-            VERSIONS=$(aws s3api list-object-versions --bucket "${BUCKET}" \
-                --query 'Versions[].{Key:Key,VersionId:VersionId}' \
-                --output json 2>/dev/null || echo "null")
-            if [[ "${VERSIONS}" != "null" && "${VERSIONS}" != "[]" ]]; then
-                aws s3api delete-objects --bucket "${BUCKET}" \
-                    --delete "{\"Objects\":${VERSIONS},\"Quiet\":true}" >/dev/null
-            fi
-            MARKERS=$(aws s3api list-object-versions --bucket "${BUCKET}" \
-                --query 'DeleteMarkers[].{Key:Key,VersionId:VersionId}' \
-                --output json 2>/dev/null || echo "null")
-            if [[ "${MARKERS}" != "null" && "${MARKERS}" != "[]" ]]; then
-                aws s3api delete-objects --bucket "${BUCKET}" \
-                    --delete "{\"Objects\":${MARKERS},\"Quiet\":true}" >/dev/null
-            fi
+            # Use --force to handle versioned buckets without shell JSON embedding
+            # (inline JSON interpolation causes MalformedXML when output has newlines)
+            aws s3 rb "s3://${BUCKET}" --force >/dev/null 2>&1 || true
             echo "  S3 bucket emptied."
         fi
 
