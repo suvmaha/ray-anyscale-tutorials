@@ -38,7 +38,7 @@ echo "── STEP 3: Delete Anyscale CloudFormation stack(s) ──────�
 # Multiple stacks can accumulate from failed setup attempts — delete all.
 CF_STACKS=$(aws cloudformation list-stacks \
     --region "${AWS_REGION}" \
-    --stack-status-filter CREATE_COMPLETE UPDATE_COMPLETE \
+    --stack-status-filter CREATE_COMPLETE UPDATE_COMPLETE DELETE_FAILED \
     --query "StackSummaries[?starts_with(StackName,'k8s-${ANYSCALE_CLOUD_NAME}-')].StackName" \
     --output text 2>/dev/null || echo "")
 
@@ -80,8 +80,26 @@ else
             echo "  S3 bucket emptied."
         fi
 
+        # If the stack is already in DELETE_FAILED, collect resources that previously
+        # failed so we can skip them on retry (they'll need manual cleanup).
+        STACK_STATUS=$(aws cloudformation describe-stacks \
+            --stack-name "${CF_STACK}" --region "${AWS_REGION}" \
+            --query "Stacks[0].StackStatus" --output text 2>/dev/null || echo "")
+        RETAIN_ARGS=""
+        if [[ "${STACK_STATUS}" == "DELETE_FAILED" ]]; then
+            FAILED_RESOURCES=$(aws cloudformation describe-stack-events \
+                --stack-name "${CF_STACK}" --region "${AWS_REGION}" \
+                --query "StackEvents[?ResourceStatus=='DELETE_FAILED'].LogicalResourceId" \
+                --output text 2>/dev/null || echo "")
+            if [[ -n "${FAILED_RESOURCES}" ]]; then
+                echo "  Retrying DELETE_FAILED stack — skipping: ${FAILED_RESOURCES}"
+                RETAIN_ARGS="--retain-resources ${FAILED_RESOURCES}"
+            fi
+        fi
+
         echo "  Deleting stack: ${CF_STACK}"
-        aws cloudformation delete-stack --stack-name "${CF_STACK}" --region "${AWS_REGION}"
+        # shellcheck disable=SC2086
+        aws cloudformation delete-stack --stack-name "${CF_STACK}" --region "${AWS_REGION}" ${RETAIN_ARGS}
         aws cloudformation wait stack-delete-complete --stack-name "${CF_STACK}" --region "${AWS_REGION}"
         echo "  CloudFormation stack deleted: ${CF_STACK}"
     done
