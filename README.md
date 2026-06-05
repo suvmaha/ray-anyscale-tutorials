@@ -79,7 +79,7 @@ After activation `python` and `python3` both work. The `.venv/` directory is git
 # 2. Wire Anyscale to the cluster
 ./anyscale/setup.sh
 
-# 3. Submit tutorial job (Tutorial 01 — Hello World)
+# 3. Submit tutorial job (Hello World)
 ./tutorials/job-hello-world/submit.sh
 
 # 4. Remove Anyscale

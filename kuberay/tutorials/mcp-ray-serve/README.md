@@ -1,4 +1,4 @@
-# Tutorial 01 — MCP Ray Serve: Weather Server
+# MCP Ray Serve: Weather Server
 
 Deploy a [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server on Ray Serve and watch it autoscale under concurrent load.
 

@@ -1,4 +1,4 @@
-# Tutorial 01 — Hello World Job
+# Hello World Job
 
 Your first Ray job running on Anyscale + EKS. Submits 100 parallel tasks — each squares a number — as proof that Anyscale can schedule and run Ray workloads on your EKS cluster.
 
@@ -40,4 +40,4 @@ Anyscale pulls the working directory from the GitHub zip, schedules the job on y
 
 ## What's Next
 
-- **Tutorial 02** — LLM batch inference at scale with Ray Data
+- **LLM Batch Inference** — LLM batch inference at scale with Ray Data

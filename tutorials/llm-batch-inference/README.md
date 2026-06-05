@@ -1,4 +1,4 @@
-# Tutorial 02 — LLM Batch Inference
+# LLM Batch Inference
 
 Classify 10,000 company names by industry using Llama-3.1-8B-Instruct and Ray Data on a GPU worker. Shows the pattern for GPU-accelerated batch LLM inference at scale on Anyscale + EKS.
 
@@ -175,4 +175,4 @@ kubectl logs -n karpenter -l app.kubernetes.io/name=karpenter --since=120s \
 
 ## What's Next
 
-- **Tutorial 03** — Hello World Service (Ray Serve + Anyscale Services, CPU)
+- **Hello World Service** — Ray Serve + Anyscale Services, CPU

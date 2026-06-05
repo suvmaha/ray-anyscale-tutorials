@@ -1,4 +1,4 @@
-# Tutorial 03 — Hello World Service
+# Hello World Service
 
 Deploy your first always-on REST endpoint with Ray Serve on Anyscale. Unlike jobs (run once, exit), services stay up and handle requests continuously — this is the Anyscale Services model.
 
@@ -76,4 +76,4 @@ anyscale service terminate --name service-hello-world
 
 ## What's Next
 
-- **Tutorial 04** — Deploy Llama 3.1 8B as an OpenAI-compatible API (Ray Serve LLM)
+- **Llama 3.1 8B Service** — Deploy Llama 3.1 8B as an OpenAI-compatible API (Ray Serve LLM)

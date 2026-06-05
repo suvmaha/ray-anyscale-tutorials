@@ -6,7 +6,7 @@ All tutorials run on the same EKS cluster. Start with CPU tutorials, add the GPU
 
 ---
 
-## 01 — Hello World Job
+## Hello World Job
 
 Submit 100 parallel Ray tasks as proof the cluster works.
 
@@ -18,7 +18,7 @@ Submit 100 parallel Ray tasks as proof the cluster works.
 
 ---
 
-## 02 — LLM Batch Inference
+## LLM Batch Inference
 
 Classify 10,000 company names by industry using Llama 3.1 8B + vLLM + Ray Data.
 
@@ -34,7 +34,7 @@ kubectl apply -f cluster/nvidia-device-plugin.yaml
 
 ---
 
-## 03 — Hello World Service
+## Hello World Service
 
 Deploy an always-on REST endpoint with Ray Serve on Anyscale Services.
 
