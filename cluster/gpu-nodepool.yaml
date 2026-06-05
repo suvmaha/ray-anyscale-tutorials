@@ -51,9 +51,6 @@ spec:
         - key: "karpenter.sh/capacity-type"
           operator: In
           values: ["on-demand"]
-        - key: "nvidia.com/gpu.product"
-          operator: In
-          values: ["NVIDIA-L4"]
         - key: "eks.amazonaws.com/capacityType"
           operator: In
           values: ["ON_DEMAND"]
