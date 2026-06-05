@@ -63,20 +63,12 @@ else
             --output text 2>/dev/null || echo "")
         if [[ -n "${BUCKET}" ]]; then
             echo "  Emptying versioned S3 bucket: ${BUCKET}"
-            # Write versions to a temp file — avoids MalformedXML from inline shell JSON
-            # interpolation. Uses file:// so CF can still delete the (now-empty) bucket.
-            TMPFILE=$(mktemp /tmp/s3-delete.XXXXXX.json)
-            for QUERY in 'Versions[].{Key:Key,VersionId:VersionId}' 'DeleteMarkers[].{Key:Key,VersionId:VersionId}'; do
-                aws s3api list-object-versions --bucket "${BUCKET}" \
-                    --query "${QUERY}" --output json 2>/dev/null > "${TMPFILE}" || true
-                CONTENT=$(cat "${TMPFILE}")
-                if [[ "${CONTENT}" != "null" && "${CONTENT}" != "[]" && -n "${CONTENT}" ]]; then
-                    echo "{\"Objects\":${CONTENT},\"Quiet\":true}" > "${TMPFILE}"
-                    aws s3api delete-objects --bucket "${BUCKET}" \
-                        --delete "file://${TMPFILE}" >/dev/null
-                fi
-            done
-            rm -f "${TMPFILE}"
+            # boto3 handles pagination and the 1000-object delete-objects batch limit.
+            # Pure AWS CLI approaches (inline JSON or temp file) fail on large versioned buckets.
+            python3 - "${BUCKET}" <<'PYEOF'
+import sys, boto3
+boto3.resource("s3").Bucket(sys.argv[1]).object_versions.all().delete()
+PYEOF
             echo "  S3 bucket emptied."
         fi
 
