@@ -112,11 +112,14 @@ CF_STACKS=$(aws cloudformation list-stacks \
     --stack-status-filter CREATE_COMPLETE UPDATE_COMPLETE UPDATE_IN_PROGRESS DELETE_FAILED \
     --query "StackSummaries[].StackName" \
     --output text 2>/dev/null || echo "")
-if [[ -z "${CF_STACKS}" ]]; then
-    ok "No active CloudFormation stacks"
-else
-    for S in ${CF_STACKS}; do warn "CloudFormation stack: ${S}"; done
-fi
+FOUND_CF=0
+for S in ${CF_STACKS}; do
+    # CDKToolkit is the CDK bootstrap stack — permanent, not a billable resource
+    [[ "${S}" == "CDKToolkit" ]] && continue
+    warn "CloudFormation stack: ${S}"
+    FOUND_CF=1
+done
+[[ "${FOUND_CF}" -eq 0 ]] && ok "No active CloudFormation stacks"
 
 # ── S3 buckets ────────────────────────────────────────────────────────────────
 header "S3 buckets  (storage cost, usually small)"
