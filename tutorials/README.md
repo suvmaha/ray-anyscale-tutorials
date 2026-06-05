@@ -2,7 +2,7 @@
 
 All tutorials run on the same EKS cluster. Start with CPU tutorials, add the GPU NodePool when ready for LLM workloads.
 
-**Command reference:** [anyscale-commands/](anyscale-commands/) — job status, logs, terminate, service management, Karpenter debugging.
+**Command reference:** [reference-anyscale-commands/](reference-anyscale-commands/) — job status, logs, terminate, service management, Karpenter debugging.
 
 ---
 

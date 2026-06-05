@@ -94,14 +94,24 @@ kubectl get pods -n anyscale-operator
 kubectl logs <pod-name> -n anyscale-operator
 ```
 
+### Get auth token for a running service
+```bash
+# Token is printed at deploy time; retrieve it later with:
+anyscale service status --name <service-name>
+# look for: query_auth_token and query_url
+```
+
 ### Query a running service
 ```bash
-# Get token + URL from deploy output, then:
-curl -H "Authorization: Bearer <TOKEN>" <BASE_URL>/hello?name=World
+# curl
+curl -H "Authorization: Bearer <TOKEN>" "<BASE_URL>/hello?name=World"
+curl -H "Authorization: Bearer <TOKEN>" "<BASE_URL>/health"
 
-# Or via Python
+# Python
 python3 tutorials/service-hello-world/query.py --token <TOKEN> --url <BASE_URL>
 ```
+
+> **Note:** Opening the URL in a browser returns `401 Authorization Required` — this is expected. nginx validates the bearer token at the ingress level before the request reaches Ray Serve.
 
 ### Terminate a service
 ```bash
