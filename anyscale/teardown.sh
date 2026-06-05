@@ -63,9 +63,20 @@ else
             --output text 2>/dev/null || echo "")
         if [[ -n "${BUCKET}" ]]; then
             echo "  Emptying versioned S3 bucket: ${BUCKET}"
-            # Use --force to handle versioned buckets without shell JSON embedding
-            # (inline JSON interpolation causes MalformedXML when output has newlines)
-            aws s3 rb "s3://${BUCKET}" --force >/dev/null 2>&1 || true
+            # Write versions to a temp file — avoids MalformedXML from inline shell JSON
+            # interpolation. Uses file:// so CF can still delete the (now-empty) bucket.
+            TMPFILE=$(mktemp /tmp/s3-delete.XXXXXX.json)
+            for QUERY in 'Versions[].{Key:Key,VersionId:VersionId}' 'DeleteMarkers[].{Key:Key,VersionId:VersionId}'; do
+                aws s3api list-object-versions --bucket "${BUCKET}" \
+                    --query "${QUERY}" --output json 2>/dev/null > "${TMPFILE}" || true
+                CONTENT=$(cat "${TMPFILE}")
+                if [[ "${CONTENT}" != "null" && "${CONTENT}" != "[]" && -n "${CONTENT}" ]]; then
+                    echo "{\"Objects\":${CONTENT},\"Quiet\":true}" > "${TMPFILE}"
+                    aws s3api delete-objects --bucket "${BUCKET}" \
+                        --delete "file://${TMPFILE}" >/dev/null
+                fi
+            done
+            rm -f "${TMPFILE}"
             echo "  S3 bucket emptied."
         fi
 
